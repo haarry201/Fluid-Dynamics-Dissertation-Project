@@ -18,6 +18,8 @@ public class Painter : MonoBehaviour
 
 
 
+
+
     void Start()
     {
         scale = (N/2f) / 4.97f;
@@ -25,6 +27,9 @@ public class Painter : MonoBehaviour
         this.Image = new Texture2D(N, N, TextureFormat.RGBA32, false);
         GetComponent<Renderer>().material.SetTexture("_BaseMap", this.Image);
         lastpos = Input.mousePosition;
+
+
+        
     }
 
 
@@ -61,6 +66,7 @@ public class Painter : MonoBehaviour
             localPoint.z = N - localPoint.z;
 
             fluid.AddDensity((int)localPoint.x, (int)localPoint.z, dAmount);
+
 
 
             if (delta.x <= -N) delta.x = -N + 1;

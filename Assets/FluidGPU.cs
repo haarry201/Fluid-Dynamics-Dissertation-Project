@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class Fluid {
+public class FluidGPU {
 
     private Texture2D Image;
     public static int res = 1024;
@@ -37,7 +37,7 @@ public class Fluid {
         return x + y * N;
     }
 
-    public Fluid(float diffusion, float viscosity, float dt, int size, int iterations)
+    public FluidGPU(float diffusion, float viscosity, float dt, int size, int iterations)
     {
         N = size;
         iter = iterations;
@@ -80,21 +80,52 @@ public class Fluid {
         Advect(0, density, s, Vx, Vy, dt);
     }
 
-    public void RenderD(Texture2D Image)
+    public void RenderD(Texture2D Image, ComputeShader shader, RenderTexture tex)
     {
 
-        for (int i = 0; i < N; i++)
-        {
-            for (int j = 0; j < N; j++)
-            {   
-                int x = (int)i;
-                int y = (int)j;
-                float d = this.density[IX(i, j)];
-                Color color = new Color(d, d, d, d);
-                Image.SetPixel(x, y, color);
-            }
-        }
+        //GPU STUFF
+        int kernelHandle = shader.FindKernel("RenderD");
+
+        
+        
+
+        ComputeBuffer buffer = new ComputeBuffer(this.density.Length, 4);
+        buffer.SetData(this.density);
+        shader.SetBuffer(kernelHandle, "density", buffer);
+
+
+
+        shader.SetTexture(kernelHandle, "Result", tex);
+        shader.SetFloat("resolution", N);
+        shader.SetFloat("N", N);
+
+        shader.Dispatch(kernelHandle, N/8, N/8, 1);
+
+
+
+        
+
+        RenderTexture.active = tex;
+        Image.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
         Image.Apply();
+
+
+        
+
+        buffer.Dispose();
+
+        // for (int i = 0; i < N; i++)
+        // {
+        //     for (int j = 0; j < N; j++)
+        //     {   
+        //         int x = (int)i;
+        //         int y = (int)j;
+        //         float d = this.density[IX(i, j)];
+        //         Color color = new Color(d, d, d, d);
+        //         Image.SetPixel(x, y, color);
+        //     }
+        // }
+        // Image.Apply();
     }
 
 

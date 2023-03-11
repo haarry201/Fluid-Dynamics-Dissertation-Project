@@ -1,14 +1,60 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel CSMain
+#pragma kernel RenderD
+
+
+float4 color;
+
+int size;
+float dt;
+float diff;
+float visc;
+// float[] s;
+// float[] density;
+// float[] Vx;
+// float[] Vy;
+// float[] Vx0;
+// float[] Vy0;
+
+int N;
+float resolution;
+
+RWStructuredBuffer<float> density;
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 RWTexture2D<float4> Result;
 
-[numthreads(8,8,1)]
+
+int id2Dto1D(int2 m_coord)
+{
+    return clamp(m_coord.x, 0, resolution - 1) + clamp(m_coord.y, 0, resolution - 1) * resolution;
+}
+
+
+
+[numthreads(16,16,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
     // TODO: insert actual code here!
 
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+    //Result[id.xy] = (id.x & id.y) * color;
 }
+
+[numthreads(8,8,1)]
+void RenderD (uint3 id : SV_DispatchThreadID)
+{
+        int x = id.x;
+        int y = id.y;
+        float d = density[id2Dto1D(int2(x, y))];
+        color = float4(d, d, d, d);
+        Result[id.xy] = color;
+    
+    //int x = id.x / resolution;
+    //int y = id.y / resolution;
+}
+
+
+// current idea: use compute buffers to pass in an array of 'fluids' which is made up of fluid struct (which has singular values for each field rather than arrays)
+// and then do the looping calculations (project etc) using the compute shader. Will have to experiment with whether it is possible to do id.x + 1 or -1 for the project
+// then we can output the array of fluids back to the c# script which will do the usual texture manipulation to display to screen (could try displaying straight from compute shader)
