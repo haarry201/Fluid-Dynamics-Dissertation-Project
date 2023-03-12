@@ -97,7 +97,7 @@ public class PainterGPU : MonoBehaviour
         }
 
 
-        fluid.Step();
+        fluid.Step(shader);
         fluid.RenderD(this.Image, shader, tex);
         //fluid.fade(40);
         lastpos = Input.mousePosition;

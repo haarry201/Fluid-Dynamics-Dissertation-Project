@@ -52,7 +52,7 @@ public class FluidGPU {
         this.Vy0 = new float[N * N];
     }
 
-    public void Step() 
+    public void Step(ComputeShader shader) 
     {
         
         
@@ -67,17 +67,17 @@ public class FluidGPU {
         float[] density = this.density;
         Texture2D Image = this.Image;
 
-        Diffuse(1, Vx0, Vx, visc, dt, iter);
-        Diffuse(2, Vy0, Vy, visc, dt, iter);
+        Diffuse(1, Vx0, Vx, visc, dt, iter, shader);
+        Diffuse(2, Vy0, Vy, visc, dt, iter, shader);
 
-        Project(Vx0, Vy0, Vx, Vy, iter);
+        Project(Vx0, Vy0, Vx, Vy, iter, shader);
 
-        Advect(1, Vx, Vx0, Vx0, Vy0, dt);
-        Advect(2, Vy, Vy0, Vx0, Vy0, dt);
+        Advect(1, Vx, Vx0, Vx0, Vy0, dt, shader);
+        Advect(2, Vy, Vy0, Vx0, Vy0, dt, shader);
 
-        Project(Vx, Vy, Vx0, Vy0, iter);
-        Diffuse(0, s, density, diff, dt, iter);
-        Advect(0, density, s, Vx, Vy, dt);
+        Project(Vx, Vy, Vx0, Vy0, iter, shader);
+        Diffuse(0, s, density, diff, dt, iter, shader);
+        Advect(0, density, s, Vx, Vy, dt, shader);
     }
 
     public void RenderD(Texture2D Image, ComputeShader shader, RenderTexture tex)
@@ -115,39 +115,63 @@ public class FluidGPU {
         this.Vy[index] += amountY;
     }
 
-    void Diffuse(int b, float[] x, float[] x0, float diff, float dt, int iter)
+    void Diffuse(int b, float[] x, float[] x0, float diff, float dt, int iter, ComputeShader shader)
     {
         float a = dt * diff * (N - 2) * (N - 2);
-        lin_solve(b, x, x0, a, 1 + 6 * a, iter);
+        lin_solve(b, x, x0, a, 1 + 6 * a, iter, shader);
     }
 
 
-        public void lin_solve(int b, float[] x, float[] x0, float a, float c, int iter)
+        public void lin_solve(int b, float[] x, float[] x0, float a, float c, int iter, ComputeShader shader)
     {
-        float cRecip = (float)1f / c;
-        for (int k = 0; k < iter; k++)
-        {
-            for (int j = 1; j < N - 1; j++)
-            {
-                for (int i = 1; i < N - 1; i++)
-                {
-                    x[IX(i, j)] =
-                      (x0[IX(i, j)]
-                      + a *
-                      (x[IX(i + 1, j)]
-                      + x[IX(i - 1, j)]
-                      + x[IX(i, j + 1)]
-                      + x[IX(i, j - 1)]
-                      )) * cRecip;
-                }
-            }
-        }
+
+        int kernelHandle = shader.FindKernel("LinearSolver");
+
+        ComputeBuffer x0Buffer = new ComputeBuffer(x0.Length, 4);
+        x0Buffer.SetData(x0);
+        shader.SetBuffer(kernelHandle, "x0", x0Buffer);
+
+        ComputeBuffer xBuffer = new ComputeBuffer(x.Length, 4);
+        xBuffer.SetData(x);
+        shader.SetBuffer(kernelHandle, "x", xBuffer);
+
+        shader.SetInt("b", b);
+        shader.SetFloat("a", a);
+        shader.SetFloat("c", c);
+        shader.SetInt("iter", iter);
+
+        shader.Dispatch(kernelHandle, N/8, N/8, 1);
+
+        x0Buffer.GetData(x0);
+        xBuffer.GetData(x);
+
+        x0Buffer.Dispose();
+        xBuffer.Dispose();
+
+        // float cRecip = (float)1f / c;
+        // for (int k = 0; k < iter; k++)
+        // {
+        //     for (int j = 1; j < N - 1; j++)
+        //     {
+        //         for (int i = 1; i < N - 1; i++)
+        //         {
+        //             x[IX(i, j)] =
+        //               (x0[IX(i, j)]
+        //               + a *
+        //               (x[IX(i + 1, j)]
+        //               + x[IX(i - 1, j)]
+        //               + x[IX(i, j + 1)]
+        //               + x[IX(i, j - 1)]
+        //               )) * cRecip;
+        //         }
+        //     }
+        // }
         set_bnd(b, x);
     }
 
 
 
-    void Project(float[] velocX, float[] velocY, float[] p, float[] div, int iter)
+    void Project(float[] velocX, float[] velocY, float[] p, float[] div, int iter, ComputeShader shader)
     {
         
         for (int j = 1; j < N - 1; j++)
@@ -171,7 +195,7 @@ public class FluidGPU {
         
         set_bnd(0, div);
         set_bnd(0, p);
-        lin_solve(0, p, div, 1, 6, iter);
+        lin_solve(0, p, div, 1, 6, iter, shader);
 
         for (int j = 1; j < N - 1; j++)
         {
@@ -188,7 +212,7 @@ public class FluidGPU {
     }
 
 
-    public void Advect(int b, float[] d, float[] d0, float[] velocX, float[] velocY, float dt)
+    public void Advect(int b, float[] d, float[] d0, float[] velocX, float[] velocY, float dt, ComputeShader shader)
     {
         float i0, i1, j0, j1;
 

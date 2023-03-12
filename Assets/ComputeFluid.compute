@@ -1,6 +1,7 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel CSMain
 #pragma kernel RenderD
+#pragma kernel LinearSolver
 
 
 float4 color;
@@ -20,6 +21,16 @@ int N;
 float resolution;
 
 RWStructuredBuffer<float> density;
+
+//lin solver:
+RWStructuredBuffer<float> x;
+RWStructuredBuffer<float> x0;
+
+int b;
+float a;
+float c;
+int iter;
+
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
@@ -54,6 +65,27 @@ void RenderD (uint3 id : SV_DispatchThreadID)
     //int y = id.y / resolution;
 }
 
+
+[numthreads(8, 8, 1)]
+void LinearSolver (uint3 id: SV_DispatchThreadID)
+{
+    int i = id.x;
+    int j = id.y;
+    float cRecip = (float)1 / c;
+        for (int k = 0; k < iter; k++)
+        {
+            
+            x[id2Dto1D(int2(i, j))] =
+            (x0[id2Dto1D(int2(i, j))]
+            + a *
+            (x[id2Dto1D(int2(i + 1, j))]
+            + x[id2Dto1D(int2(i - 1, j))]
+            + x[id2Dto1D(int2(i, j + 1))]
+            + x[id2Dto1D(int2(i, j - 1))]
+            )) * cRecip;
+                
+        }
+}
 
 // current idea: use compute buffers to pass in an array of 'fluids' which is made up of fluid struct (which has singular values for each field rather than arrays)
 // and then do the looping calculations (project etc) using the compute shader. Will have to experiment with whether it is possible to do id.x + 1 or -1 for the project
