@@ -36,6 +36,11 @@ public class PainterGPU : MonoBehaviour
         tex = new RenderTexture(N, N, 24);
         tex.enableRandomWrite = true;
         tex.Create();
+
+        shader.SetFloat("resolution", N);
+        shader.SetFloat("N", N);
+
+
     }
 
 

@@ -83,49 +83,22 @@ public class FluidGPU {
     public void RenderD(Texture2D Image, ComputeShader shader, RenderTexture tex)
     {
 
-        //GPU STUFF
         int kernelHandle = shader.FindKernel("RenderD");
-
-        
-        
 
         ComputeBuffer buffer = new ComputeBuffer(this.density.Length, 4);
         buffer.SetData(this.density);
         shader.SetBuffer(kernelHandle, "density", buffer);
 
-
-
         shader.SetTexture(kernelHandle, "Result", tex);
-        shader.SetFloat("resolution", N);
-        shader.SetFloat("N", N);
 
         shader.Dispatch(kernelHandle, N/8, N/8, 1);
-
-
-
+        buffer.Dispose();
         
-
         RenderTexture.active = tex;
         Image.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
         Image.Apply();
 
 
-        
-
-        buffer.Dispose();
-
-        // for (int i = 0; i < N; i++)
-        // {
-        //     for (int j = 0; j < N; j++)
-        //     {   
-        //         int x = (int)i;
-        //         int y = (int)j;
-        //         float d = this.density[IX(i, j)];
-        //         Color color = new Color(d, d, d, d);
-        //         Image.SetPixel(x, y, color);
-        //     }
-        // }
-        // Image.Apply();
     }
 
 
