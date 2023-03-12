@@ -6,10 +6,7 @@ using System;
 public class FluidGPU {
 
     private Texture2D Image;
-    public static int res = 1024;
-    public static int ival = 256;
 
-    int size;
     float dt;
     float diff;
     float visc;
@@ -80,6 +77,21 @@ public class FluidGPU {
         Advect(0, density, s, Vx, Vy, dt, shader);
     }
 
+
+    public void TestSolver(ComputeShader shader)
+    {
+        int b = 1;
+        float[] x = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+        float[] x0 = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
+        float a = this.dt * this.visc * (N - 2) * (N - 2);
+        int iter = 16;
+        lin_solve(b, x, x0, a, 1 + 6 * a, iter, shader);
+        foreach(var item in x){
+            Debug.Log(item);
+        }
+    }   
+
+
     public void RenderD(Texture2D Image, ComputeShader shader, RenderTexture tex)
     {
 
@@ -91,7 +103,7 @@ public class FluidGPU {
 
         shader.SetTexture(kernelHandle, "Result", tex);
 
-        shader.Dispatch(kernelHandle, N/8, N/8, 1);
+        shader.Dispatch(kernelHandle, N/16, N/16, 1);
         buffer.Dispose();
         
         RenderTexture.active = tex;
@@ -102,10 +114,21 @@ public class FluidGPU {
     }
 
 
-    public void AddDensity(int x, int y, float amount)
+    public void AddDensity(int x, int y, float amount, int densityWidth)
     {
         int index = IX(x, y);
         this.density[index] += amount;
+        // for (int i = 0; i < densityWidth; i++){
+        //     this.density[IX(x+i, y)] += amount;
+        //     this.density[IX(x-i, y)] += amount;
+        //     this.density[IX(x, y+i)] += amount;
+        //     this.density[IX(x, y-i)] += amount;
+
+        //     this.density[IX(x+i, y-i)] += amount;
+        //     this.density[IX(x+i, y+i)] += amount;
+        //     this.density[IX(x-i, y-i)] += amount;
+        //     this.density[IX(x-i, y+i)] += amount;
+        // }
     }
 
     public void AddVelocity(int x, int y, float amountX, float amountY)
@@ -117,6 +140,25 @@ public class FluidGPU {
 
     void Diffuse(int b, float[] x, float[] x0, float diff, float dt, int iter, ComputeShader shader)
     {
+        // int kernelHandle = shader.FindKernel("Diffuse");
+
+
+
+        // ComputeBuffer x0Buffer = new ComputeBuffer(x0.Length, 4);
+        // x0Buffer.SetData(x0);
+        // shader.SetBuffer(kernelHandle, "x0", x0Buffer);
+
+        // ComputeBuffer xBuffer = new ComputeBuffer(x.Length, 4);
+        // xBuffer.SetData(x);
+        // shader.SetBuffer(kernelHandle, "x", xBuffer);
+
+        // shader.SetInt("b", b);
+        // shader.SetFloat("diff", diff);
+        // shader.SetFloat("dt", dt);
+        // shader.SetInt("iter", iter);
+
+
+
         float a = dt * diff * (N - 2) * (N - 2);
         lin_solve(b, x, x0, a, 1 + 6 * a, iter, shader);
     }
@@ -126,6 +168,8 @@ public class FluidGPU {
     {
 
         int kernelHandle = shader.FindKernel("LinearSolver");
+
+
 
         ComputeBuffer x0Buffer = new ComputeBuffer(x0.Length, 4);
         x0Buffer.SetData(x0);
@@ -140,32 +184,14 @@ public class FluidGPU {
         shader.SetFloat("c", c);
         shader.SetInt("iter", iter);
 
-        shader.Dispatch(kernelHandle, N/8, N/8, 1);
+        shader.Dispatch(kernelHandle, N/16, N/16, 1);
 
         x0Buffer.GetData(x0);
         xBuffer.GetData(x);
 
         x0Buffer.Dispose();
         xBuffer.Dispose();
-
-        // float cRecip = (float)1f / c;
-        // for (int k = 0; k < iter; k++)
-        // {
-        //     for (int j = 1; j < N - 1; j++)
-        //     {
-        //         for (int i = 1; i < N - 1; i++)
-        //         {
-        //             x[IX(i, j)] =
-        //               (x0[IX(i, j)]
-        //               + a *
-        //               (x[IX(i + 1, j)]
-        //               + x[IX(i - 1, j)]
-        //               + x[IX(i, j + 1)]
-        //               + x[IX(i, j - 1)]
-        //               )) * cRecip;
-        //         }
-        //     }
-        // }
+    
         set_bnd(b, x);
     }
 

@@ -485,8 +485,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   plane: {fileID: 727632330}
-  N: 80
+  N: 4
   dAmount: 200
+  iterations: 32
 --- !u!1 &851399158
 GameObject:
   m_ObjectHideFlags: 0
@@ -855,8 +856,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

@@ -235,8 +235,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   plane: {fileID: 401663460}
-  N: 80
+  N: 4
   dAmount: 200
+  densityWidth: 0
+  iterations: 4000
   shader: {fileID: 7200000, guid: 2e85cc0354a5e5347a8ab0f275edaedd, type: 3}
   tex: {fileID: 0}
 --- !u!1 &907626985
@@ -304,13 +306,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
   m_textAlignment: 65535

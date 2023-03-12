@@ -80,6 +80,20 @@ public class Fluid {
         Advect(0, density, s, Vx, Vy, dt);
     }
 
+    public void TestSolver()
+    {
+        int b = 1;
+        float[] x = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+        float[] x0 = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
+        float a = this.dt * this.visc * (N - 2) * (N - 2);
+        int iter = 16;
+        lin_solve(b, x, x0, a, 1 + 6 * a, iter);
+        foreach(var item in x){
+            Debug.Log(item);
+        }
+    }
+
+
     public void RenderD(Texture2D Image)
     {
 
@@ -118,7 +132,7 @@ public class Fluid {
     }
 
 
-        public void lin_solve(int b, float[] x, float[] x0, float a, float c, int iter)
+    public void lin_solve(int b, float[] x, float[] x0, float a, float c, int iter)
     {
         float cRecip = (float)1f / c;
         for (int k = 0; k < iter; k++)

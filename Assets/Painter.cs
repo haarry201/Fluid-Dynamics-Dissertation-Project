@@ -15,6 +15,8 @@ public class Painter : MonoBehaviour
     Vector3 delta;
     public int dAmount;
 
+    public int iterations;
+
 
 
 
@@ -23,10 +25,12 @@ public class Painter : MonoBehaviour
     void Start()
     {
         scale = (N/2f) / 4.97f;
-        fluid = new Fluid(0.000008f, 0.000001f, 0.2f, N, 16);
+        fluid = new Fluid(0.000008f, 0.000001f, 0.2f, N, iterations);
         this.Image = new Texture2D(N, N, TextureFormat.RGBA32, false);
         GetComponent<Renderer>().material.SetTexture("_BaseMap", this.Image);
         lastpos = Input.mousePosition;
+
+        fluid.TestSolver();
 
 
         
@@ -102,6 +106,12 @@ public class Painter : MonoBehaviour
         }
        */
     }
+
+    // void FixedUpdate()
+    // {
+    //     fluid.Step();
+    //     fluid.RenderD(this.Image);
+    // }
 
 
 

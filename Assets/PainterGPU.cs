@@ -15,6 +15,10 @@ public class PainterGPU : MonoBehaviour
     Vector3 delta;
     public int dAmount;
 
+    public int densityWidth;
+
+    public int iterations;
+
 
     //GPU STUFF
     public ComputeShader shader;
@@ -26,7 +30,7 @@ public class PainterGPU : MonoBehaviour
     void Start()
     {
         scale = (N/2f) / 4.97f;
-        fluid = new FluidGPU(0.000008f, 0.000001f, 0.2f, N, 16);
+        fluid = new FluidGPU(0.000008f, 0.000001f, 0.2f, N, iterations);
         this.Image = new Texture2D(N, N, TextureFormat.RGBA32, false);
         GetComponent<Renderer>().material.SetTexture("_BaseMap", this.Image);
         lastpos = Input.mousePosition;
@@ -39,6 +43,8 @@ public class PainterGPU : MonoBehaviour
 
         shader.SetFloat("resolution", N);
         shader.SetFloat("N", N);
+
+        fluid.TestSolver(shader);
 
 
     }
@@ -76,7 +82,7 @@ public class PainterGPU : MonoBehaviour
             localPoint.x = N - localPoint.x;
             localPoint.z = N - localPoint.z;
 
-            fluid.AddDensity((int)localPoint.x, (int)localPoint.z, dAmount);
+            fluid.AddDensity((int)localPoint.x, (int)localPoint.z, dAmount, densityWidth);
 
 
 
@@ -96,9 +102,9 @@ public class PainterGPU : MonoBehaviour
 
         }
 
-
-        fluid.Step(shader);
-        fluid.RenderD(this.Image, shader, tex);
+        //fluid.Step(shader);
+        //fluid.RenderD(this.Image, shader, tex);
+        
         //fluid.fade(40);
         lastpos = Input.mousePosition;
 
@@ -114,6 +120,14 @@ public class PainterGPU : MonoBehaviour
        */
     }
 
+    void FixedUpdate()
+    {
+        fluid.Step(shader);
+        fluid.RenderD(this.Image, shader, tex);
+    }
+
 
 
 }
+
+
