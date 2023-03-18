@@ -22,6 +22,8 @@ public class Fluid {
 
     int N, iter;
 
+    Color color;
+
 
 
 
@@ -82,15 +84,15 @@ public class Fluid {
 
     public void TestSolver()
     {
-        int b = 1;
-        float[] x = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-        float[] x0 = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
-        float a = this.dt * this.visc * (N - 2) * (N - 2);
-        int iter = 16;
-        lin_solve(b, x, x0, a, 1 + 6 * a, iter);
-        foreach(var item in x){
-            Debug.Log(item);
-        }
+        // int b = 1;
+        // float[] x = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+        // float[] x0 = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
+        // float a = this.dt * this.visc * (N - 2) * (N - 2);
+        // int iter = 16;
+        // lin_solve(b, x, x0, a, 1 + 6 * a, iter);
+        // foreach(var item in x){
+        //     Debug.Log(item);
+        // }
     }
 
 
@@ -104,7 +106,15 @@ public class Fluid {
                 int x = (int)i;
                 int y = (int)j;
                 float d = this.density[IX(i, j)];
-                Color color = new Color(d, d, d, d);
+                //if(d>0f){
+                    //Color color = new Color(1/(3*d), 1/(4*d), 1/d, d);
+                    Color color = new Color(d, d, d, d);
+                //}
+                // else{
+                //     Color color = new Color(0, 0, 0, 0);
+                // }
+
+                
                 Image.SetPixel(x, y, color);
             }
         }

@@ -485,9 +485,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   plane: {fileID: 727632330}
-  N: 4
-  dAmount: 200
-  iterations: 32
+  N: 80
+  dAmount: 255
+  iterations: 16
 --- !u!1 &851399158
 GameObject:
   m_ObjectHideFlags: 0
@@ -522,6 +522,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   frameText: {fileID: 1649837736}
   memText: {fileID: 447083852}
+  sampleDuration: 1
 --- !u!114 &851399160
 MonoBehaviour:
   m_ObjectHideFlags: 0

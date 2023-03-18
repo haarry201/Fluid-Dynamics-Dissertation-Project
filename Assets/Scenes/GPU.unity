@@ -235,10 +235,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   plane: {fileID: 401663460}
-  N: 4
-  dAmount: 200
+  N: 80
+  dAmount: 255
   densityWidth: 0
-  iterations: 4000
+  iterations: 16
   shader: {fileID: 7200000, guid: 2e85cc0354a5e5347a8ab0f275edaedd, type: 3}
   tex: {fileID: 0}
 --- !u!1 &907626985
@@ -410,6 +410,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   frameText: {fileID: 907626986}
   memText: {fileID: 1467356972}
+  sampleDuration: 1
 --- !u!114 &979692277
 MonoBehaviour:
   m_ObjectHideFlags: 0

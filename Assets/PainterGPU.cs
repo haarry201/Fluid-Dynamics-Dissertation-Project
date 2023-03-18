@@ -44,7 +44,7 @@ public class PainterGPU : MonoBehaviour
         shader.SetFloat("resolution", N);
         shader.SetFloat("N", N);
 
-        fluid.TestSolver(shader);
+        //fluid.TestSolver(shader);
 
 
     }
@@ -102,8 +102,8 @@ public class PainterGPU : MonoBehaviour
 
         }
 
-        //fluid.Step(shader);
-        //fluid.RenderD(this.Image, shader, tex);
+        fluid.Step(shader);
+        fluid.RenderD(this.Image, shader, tex);
         
         //fluid.fade(40);
         lastpos = Input.mousePosition;
@@ -122,8 +122,8 @@ public class PainterGPU : MonoBehaviour
 
     void FixedUpdate()
     {
-        fluid.Step(shader);
-        fluid.RenderD(this.Image, shader, tex);
+        // fluid.Step(shader);
+        // fluid.RenderD(this.Image, shader, tex);
     }
 
 
