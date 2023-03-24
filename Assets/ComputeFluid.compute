@@ -2,6 +2,10 @@
 #pragma kernel CSMain
 #pragma kernel RenderD
 #pragma kernel LinearSolver
+#pragma kernel Diffuse
+#pragma kernel Project1
+#pragma kernel Project2
+//#pragma kernel SetBounds
 
 
 float4 color;
@@ -26,15 +30,22 @@ RWStructuredBuffer<float> density;
 RWStructuredBuffer<float> x;
 RWStructuredBuffer<float> x0;
 
+//project1:
+RWStructuredBuffer<float> velocX;
+RWStructuredBuffer<float> velocY;
+RWStructuredBuffer<float> p;
+RWStructuredBuffer<float> div;
+
+//project2:
+RWStructuredBuffer<float> velocX2;
+RWStructuredBuffer<float> velocY2;
+RWStructuredBuffer<float> p2;
+
 int b;
 float a;
 float c;
 int iter;
 
-
-//diffuse:
-//float diff;
-//float dt;
 
 
 // Create a RenderTexture with enableRandomWrite flag and set it
@@ -91,7 +102,101 @@ void LinearSolver (uint3 id: SV_DispatchThreadID)
                 
 }
 
-//[numthreads(8, 8, 1)]
+[numthreads(16,16,1)]
+void Project1 (uint3 id: SV_DispatchThreadID)
+{
+    int i = id.x;
+    int j = id.y;
+
+    div[id2Dto1D(int2(i, j))] =
+                  (-0.5f *
+                    (velocX[id2Dto1D(int2(i + 1, j))] -
+                      velocX[id2Dto1D(int2(i - 1, j))] +
+                      velocY[id2Dto1D(int2(i, j + 1))] -
+                      velocY[id2Dto1D(int2(i, j - 1))])) /
+                  N;
+               
+                p[id2Dto1D(int2(i, j))] = 0;
+}
+
+
+
+[numthreads(16,16,1)]
+void Project2 (uint3 id: SV_DispatchThreadID)
+{
+    int i = id.x;
+    int j = id.y;
+    velocX[id2Dto1D(int2(i, j))] -= 0.5f * (p[id2Dto1D(int2(i + 1, j))] - p[id2Dto1D(int2(i - 1, j))]) * N;
+    velocY[id2Dto1D(int2(i, j))] -= 0.5f * (p[id2Dto1D(int2(i, j + 1))] - p[id2Dto1D(int2(i, j - 1))]) * N;
+}
+
+
+// [numthreads(16,16,1)]
+// void SetBounds (uint3 id: SV_DispatchThreadID)
+// {
+//     int i = id.x;
+//     int j = id.y;
+
+//     x[id2Dto1D(int2((i, 0)))] = b == 2 ? -x[id2Dto1D(int2((i, 1)))] : x[id2Dto1D(int2((i, 1)))];
+//     x[id2Dto1D(int2((i, N - 1)))] = b == 2 ? -x[id2Dto1D(int2((i, N - 2)))] : x[id2Dto1D(int2((i, N - 2)))];
+
+//     x[id2Dto1D(int2((0, j)))] = b == 1 ? -x[id2Dto1D(int2((1, j)))] : x[id2Dto1D(int2((1, j)))];
+//     x[id2Dto1D(int2((N - 1, j)))] = b == 1 ? -x[id2Dto1D(int2((N - 2, j)))] : x[id2Dto1D(int2((N - 2, j)))];
+
+//     x[id2Dto1D(int2((0, 0)))] = 0.5f * (x[id2Dto1D(int2((1, 0)))] + x[id2Dto1D(int2((0, 1)))]);
+//     x[id2Dto1D(int2((0, N - 1)))] = 0.5f * (x[id2Dto1D(int2((1, N - 1)))] + x[id2Dto1D(int2((0, N - 2)))]);
+//     x[id2Dto1D(int2((N - 1, 0)))] = 0.5f * (x[id2Dto1D(int2((N - 2, 0)))] + x[id2Dto1D(int2((N - 1, 1)))]);
+//     x[id2Dto1D(int2((N - 1, N - 1)))] = 0.5f * (x[id2Dto1D(int2((N - 2, N - 1)))] + x[id2Dto1D(int2((N - 1, N - 2)))]);
+
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void DiffuseSolver(int i, int j, float a, float c)
+{
+
+    float cRecip = (float)1 / c;
+    
+    for (int k = 0; k < iter; k++){
+        x[id2Dto1D(int2(i, j))] =
+        (x0[id2Dto1D(int2(i, j))]
+        + a *
+        (x[id2Dto1D(int2(i + 1, j))]
+        + x[id2Dto1D(int2(i - 1, j))]
+        + x[id2Dto1D(int2(i, j + 1))]
+        + x[id2Dto1D(int2(i, j - 1))]
+        )) * cRecip;
+    }
+}
+
+[numthreads(8, 8, 1)]
+void Diffuse (uint3 id: SV_DispatchThreadID)
+{
+    int i = id.x;
+    int j = id.y;
+    float a = dt * diff * (N - 2) * (N - 2);
+    float c = 1 + 6 * a;
+    DiffuseSolver(i, j, a, c);
+}
+
+
+
+
 
 // current idea: use compute buffers to pass in an array of 'fluids' which is made up of fluid struct (which has singular values for each field rather than arrays)
 // and then do the looping calculations (project etc) using the compute shader. Will have to experiment with whether it is possible to do id.x + 1 or -1 for the project
