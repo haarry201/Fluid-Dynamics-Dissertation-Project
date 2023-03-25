@@ -313,89 +313,89 @@ public class FluidGPU {
     public void Advect(int b, float[] d, float[] d0, float[] velocX, float[] velocY, float dt, ComputeShader shader)
     {
 
-        // int kernelHandle = shader.FindKernel("Advect");
+        int kernelHandle = shader.FindKernel("Advect");
 
-        // ComputeBuffer velocXBuffer = new ComputeBuffer(velocX.Length, 4);
-        // velocXBuffer.SetData(velocX);
-        // shader.SetBuffer(kernelHandle, "velocX", velocXBuffer);
+        ComputeBuffer velocXBuffer = new ComputeBuffer(velocX.Length, 4);
+        velocXBuffer.SetData(velocX);
+        shader.SetBuffer(kernelHandle, "velocX", velocXBuffer);
 
-        // ComputeBuffer velocYBuffer = new ComputeBuffer(velocY.Length, 4);
-        // velocYBuffer.SetData(velocY);
-        // shader.SetBuffer(kernelHandle, "velocY", velocYBuffer);
+        ComputeBuffer velocYBuffer = new ComputeBuffer(velocY.Length, 4);
+        velocYBuffer.SetData(velocY);
+        shader.SetBuffer(kernelHandle, "velocY", velocYBuffer);
 
-        // ComputeBuffer dBuffer = new ComputeBuffer(d.Length, 4);
-        // dBuffer.SetData(d);
-        // shader.SetBuffer(kernelHandle, "d", dBuffer);
+        ComputeBuffer dBuffer = new ComputeBuffer(d.Length, 4);
+        dBuffer.SetData(d);
+        shader.SetBuffer(kernelHandle, "d", dBuffer);
 
-        // ComputeBuffer d0Buffer = new ComputeBuffer(d0.Length, 4);
-        // d0Buffer.SetData(d0);
-        // shader.SetBuffer(kernelHandle, "d0", d0Buffer);
+        ComputeBuffer d0Buffer = new ComputeBuffer(d0.Length, 4);
+        d0Buffer.SetData(d0);
+        shader.SetBuffer(kernelHandle, "d0", d0Buffer);
 
-        // shader.SetInt("b", b);
+        shader.SetInt("b", b);
 
-        // shader.SetFloat("dt", dt);
+        shader.SetFloat("dt", dt);
 
-        // shader.Dispatch(kernelHandle, N/16, N/16, 1);
+        shader.Dispatch(kernelHandle, N/16, N/16, 1);
 
-        // velocXBuffer.GetData(velocX);
-        // velocYBuffer.GetData(velocY);
-        // dBuffer.GetData(d);
-        // d0Buffer.GetData(d0);
-
-
-        // velocXBuffer.Dispose();
-        // velocYBuffer.Dispose();
-        // dBuffer.Dispose();
-        // d0Buffer.Dispose();
+        velocXBuffer.GetData(velocX);
+        velocYBuffer.GetData(velocY);
+        dBuffer.GetData(d);
+        d0Buffer.GetData(d0);
 
 
+        velocXBuffer.Dispose();
+        velocYBuffer.Dispose();
+        dBuffer.Dispose();
+        d0Buffer.Dispose();
 
-        float i0, i1, j0, j1;
 
-        float dtx = dt * (N - 2);
-        float dty = dt * (N - 2);
 
-        float s0, s1, t0, t1;
-        float tmp1, tmp2, x, y;
+        // float i0, i1, j0, j1;
 
-        float NXfloat = N;
-        float NYfloat = N;
-        float ifloat, jfloat;
-        int i, j;
+        // float dtx = dt * (N - 2);
+        // float dty = dt * (N - 2);
 
-        for (j = 1, jfloat = 1; j < N - 1; j++, jfloat++)
-        {
-            for (i = 1, ifloat = 1; i < N - 1; i++, ifloat++)
-            {
-                tmp1 = dtx * velocX[IX(i, j)];
-                tmp2 = dty * velocY[IX(i, j)];
-                x = ifloat - tmp1;
-                y = jfloat - tmp2;
+        // float s0, s1, t0, t1;
+        // float tmp1, tmp2, x, y;
 
-                if (x < 0.5f) x = 0.5f;
-                if (x > NXfloat + 0.5f) x = NXfloat + 0.5f;
-                i0 = (float)Math.Floor(x);
-                i1 = i0 + 1.0f;
-                if (y < 0.5f) y = 0.5f;
-                if (y > NYfloat + 0.5f) y = NYfloat + 0.5f;
-                j0 = (float)Math.Floor(y);
-                j1 = j0 + 1.0f;
+        // float NXfloat = N;
+        // float NYfloat = N;
+        // float ifloat, jfloat;
+        // int i, j;
 
-                s1 = x - i0;
-                s0 = 1.0f - s1;
-                t1 = y - j0;
-                t0 = 1.0f - t1;
+        // for (j = 1, jfloat = 1; j < N - 1; j++, jfloat++)
+        // {
+        //     for (i = 1, ifloat = 1; i < N - 1; i++, ifloat++)
+        //     {
+        //         tmp1 = dtx * velocX[IX(i, j)];
+        //         tmp2 = dty * velocY[IX(i, j)];
+        //         x = ifloat - tmp1;
+        //         y = jfloat - tmp2;
 
-                int i0i = (int)(i0);
-                int i1i = (int)(i1);
-                int j0i = (int)(j0);
-                int j1i = (int)(j1);
+        //         if (x < 0.5f) x = 0.5f;
+        //         if (x > NXfloat + 0.5f) x = NXfloat + 0.5f;
+        //         i0 = (float)Math.Floor(x);
+        //         i1 = i0 + 1.0f;
+        //         if (y < 0.5f) y = 0.5f;
+        //         if (y > NYfloat + 0.5f) y = NYfloat + 0.5f;
+        //         j0 = (float)Math.Floor(y);
+        //         j1 = j0 + 1.0f;
 
-                d[IX(i, j)] =
-                  s0 * (t0 * d0[IX(i0i, j0i)] + t1 * d0[IX(i0i, j1i)]) +
-                  s1 * (t0 * d0[IX(i1i, j0i)] + t1 * d0[IX(i1i, j1i)]);
-            }
-        }
+        //         s1 = x - i0;
+        //         s0 = 1.0f - s1;
+        //         t1 = y - j0;
+        //         t0 = 1.0f - t1;
+
+        //         int i0i = (int)(i0);
+        //         int i1i = (int)(i1);
+        //         int j0i = (int)(j0);
+        //         int j1i = (int)(j1);
+
+        //         d[IX(i, j)] =
+        //           s0 * (t0 * d0[IX(i0i, j0i)] + t1 * d0[IX(i0i, j1i)]) +
+        //           s1 * (t0 * d0[IX(i1i, j0i)] + t1 * d0[IX(i1i, j1i)]);
+        //     }
+        // }
 
         set_bnd(b, d, shader);
     }
