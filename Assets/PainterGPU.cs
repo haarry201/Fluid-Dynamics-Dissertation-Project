@@ -42,7 +42,7 @@ public class PainterGPU : MonoBehaviour
         tex.Create();
 
         shader.SetFloat("resolution", N);
-        shader.SetFloat("N", N);
+        shader.SetInt("N", N);
 
         //fluid.TestSolver(shader);
 

@@ -5,6 +5,7 @@
 #pragma kernel Diffuse
 #pragma kernel Project1
 #pragma kernel Project2
+#pragma kernel Advect
 //#pragma kernel SetBounds
 
 
@@ -26,6 +27,7 @@ float resolution;
 
 RWStructuredBuffer<float> density;
 
+
 //lin solver:
 RWStructuredBuffer<float> x;
 RWStructuredBuffer<float> x0;
@@ -40,6 +42,11 @@ RWStructuredBuffer<float> div;
 RWStructuredBuffer<float> velocX2;
 RWStructuredBuffer<float> velocY2;
 RWStructuredBuffer<float> p2;
+
+//advect:
+RWStructuredBuffer<float> d;
+RWStructuredBuffer<float> d0;
+
 
 int b;
 float a;
@@ -170,7 +177,7 @@ void Project2 (uint3 id: SV_DispatchThreadID)
 void DiffuseSolver(int i, int j, float a, float c)
 {
 
-    float cRecip = (float)1 / c;
+    float cRecip = 1 / c;
     
     for (int k = 0; k < iter; k++){
         x[id2Dto1D(int2(i, j))] =
@@ -184,7 +191,7 @@ void DiffuseSolver(int i, int j, float a, float c)
     }
 }
 
-[numthreads(8, 8, 1)]
+[numthreads(16,16,1)]
 void Diffuse (uint3 id: SV_DispatchThreadID)
 {
     int i = id.x;
@@ -195,6 +202,57 @@ void Diffuse (uint3 id: SV_DispatchThreadID)
 }
 
 
+
+[numthreads(16,16,1)]
+void Advect (uint3 id: SV_DispatchThreadID)
+{
+    float i0, i1, j0, j1;
+
+    float dtx = dt * (N - 2);
+    float dty = dt * (N - 2);
+
+    float s0, s1, t0, t1;
+    float tmp1, tmp2, x, y;
+
+    float NXfloat = N;
+    float NYfloat = N;
+    float ifloat, jfloat;
+
+    int i = id.x;
+    int j = id.y;
+
+    ifloat = (float)(i);
+    jfloat = (float)(j);
+
+
+    tmp1 = dtx * velocX[id2Dto1D(int2(i, j))];
+    tmp2 = dty * velocY[id2Dto1D(int2(i, j))];
+    x = ifloat - tmp1;
+    y = jfloat - tmp2;
+
+    if (x < 0.5f) x = 0.5f;
+    if (x > NXfloat + 0.5f) x = NXfloat + 0.5f;
+    i0 = (float)floor(x);
+    i1 = i0 + 1.0f;
+    if (y < 0.5f) y = 0.5f;
+    if (y > NYfloat + 0.5f) y = NYfloat + 0.5f;
+    j0 = (float)floor(y);
+    j1 = j0 + 1.0f;
+
+    s1 = x - i0;
+    s0 = 1.0f - s1;
+    t1 = y - j0;
+    t0 = 1.0f - t1;
+
+    int i0i = (int)(i0);
+    int i1i = (int)(i1);
+    int j0i = (int)(j0);
+    int j1i = (int)(j1);
+
+    d[id2Dto1D(int2(i, j))] =
+        s0 * (t0 * d0[id2Dto1D(int2(i0i, j0i))] + t1 * d0[id2Dto1D(int2(i0i, j1i))]) +
+        s1 * (t0 * d0[id2Dto1D(int2(i1i, j0i))] + t1 * d0[id2Dto1D(int2(i1i, j1i))]);
+}
 
 
 

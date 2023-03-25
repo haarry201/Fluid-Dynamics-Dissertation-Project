@@ -140,34 +140,34 @@ public class FluidGPU {
 
     void Diffuse(int b, float[] x, float[] x0, float diff, float dt, int iter, ComputeShader shader)
     {
-        // int kernelHandle = shader.FindKernel("Diffuse");
+        int kernelHandle = shader.FindKernel("Diffuse");
 
+        shader.SetInt("N", N);
 
+        ComputeBuffer x0Buffer = new ComputeBuffer(x0.Length, 4);
+        x0Buffer.SetData(x0);
+        shader.SetBuffer(kernelHandle, "x0", x0Buffer);
 
-        // ComputeBuffer x0Buffer = new ComputeBuffer(x0.Length, 4);
-        // x0Buffer.SetData(x0);
-        // shader.SetBuffer(kernelHandle, "x0", x0Buffer);
+        ComputeBuffer xBuffer = new ComputeBuffer(x.Length, 4);
+        xBuffer.SetData(x);
+        shader.SetBuffer(kernelHandle, "x", xBuffer);
 
-        // ComputeBuffer xBuffer = new ComputeBuffer(x.Length, 4);
-        // xBuffer.SetData(x);
-        // shader.SetBuffer(kernelHandle, "x", xBuffer);
+        shader.SetInt("b", b);
+        shader.SetFloat("diff", diff);
+        shader.SetFloat("dt", dt);
+        shader.SetInt("iter", iter);
 
-        // shader.SetInt("b", b);
-        // shader.SetFloat("diff", diff);
-        // shader.SetFloat("dt", dt);
-        // shader.SetInt("iter", iter);
+        shader.Dispatch(kernelHandle, N/16, N/16, 1);
 
-        // shader.Dispatch(kernelHandle, N/16, N/16, 1);
+        x0Buffer.GetData(x0);
+        xBuffer.GetData(x);
 
-        // x0Buffer.GetData(x0);
-        // xBuffer.GetData(x);
+        x0Buffer.Dispose();
+        xBuffer.Dispose();
 
-        // x0Buffer.Dispose();
-        // xBuffer.Dispose();
-
-        // set_bnd(b, x);
-        float a = dt * diff * (N - 2) * (N - 2);
-        lin_solve(b, x, x0, a, 1 + 6 * a, iter, shader);
+        set_bnd(b, x, shader);
+        // float a = dt * diff * (N - 2) * (N - 2);
+        // lin_solve(b, x, x0, a, 1 + 6 * a, iter, shader);
     }
 
 
@@ -312,6 +312,44 @@ public class FluidGPU {
 
     public void Advect(int b, float[] d, float[] d0, float[] velocX, float[] velocY, float dt, ComputeShader shader)
     {
+
+        // int kernelHandle = shader.FindKernel("Advect");
+
+        // ComputeBuffer velocXBuffer = new ComputeBuffer(velocX.Length, 4);
+        // velocXBuffer.SetData(velocX);
+        // shader.SetBuffer(kernelHandle, "velocX", velocXBuffer);
+
+        // ComputeBuffer velocYBuffer = new ComputeBuffer(velocY.Length, 4);
+        // velocYBuffer.SetData(velocY);
+        // shader.SetBuffer(kernelHandle, "velocY", velocYBuffer);
+
+        // ComputeBuffer dBuffer = new ComputeBuffer(d.Length, 4);
+        // dBuffer.SetData(d);
+        // shader.SetBuffer(kernelHandle, "d", dBuffer);
+
+        // ComputeBuffer d0Buffer = new ComputeBuffer(d0.Length, 4);
+        // d0Buffer.SetData(d0);
+        // shader.SetBuffer(kernelHandle, "d0", d0Buffer);
+
+        // shader.SetInt("b", b);
+
+        // shader.SetFloat("dt", dt);
+
+        // shader.Dispatch(kernelHandle, N/16, N/16, 1);
+
+        // velocXBuffer.GetData(velocX);
+        // velocYBuffer.GetData(velocY);
+        // dBuffer.GetData(d);
+        // d0Buffer.GetData(d0);
+
+
+        // velocXBuffer.Dispose();
+        // velocYBuffer.Dispose();
+        // dBuffer.Dispose();
+        // d0Buffer.Dispose();
+
+
+
         float i0, i1, j0, j1;
 
         float dtx = dt * (N - 2);
