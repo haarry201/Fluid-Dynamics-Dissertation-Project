@@ -140,7 +140,10 @@ public class FluidGPU {
 
     void Diffuse(int b, float[] x, float[] x0, float diff, float dt, int iter, ComputeShader shader)
     {
-        int kernelHandle = shader.FindKernel("Diffuse");
+        int kernelHandle = shader.FindKernel("Diffuse0");
+        if (b == 1){ kernelHandle = shader.FindKernel("Diffuse1");}
+        if (b == 2){ kernelHandle = shader.FindKernel("Diffuse2");}
+        //int kernelHandle = shader.FindKernel("Diffuse");
 
         shader.SetInt("N", N);
 
@@ -165,7 +168,12 @@ public class FluidGPU {
         x0Buffer.Dispose();
         xBuffer.Dispose();
 
-        set_bnd(b, x, shader);
+        x[IX(0, 0)] = 0.5f * (x[IX(1, 0)] + x[IX(0, 1)]);
+        x[IX(0, N - 1)] = 0.5f * (x[IX(1, N - 1)] + x[IX(0, N - 2)]);
+        x[IX(N - 1, 0)] = 0.5f * (x[IX(N - 2, 0)] + x[IX(N - 1, 1)]);
+        x[IX(N - 1, N - 1)] = 0.5f * (x[IX(N - 2, N - 1)] + x[IX(N - 1, N - 2)]);
+
+        //set_bnd(b, x, shader);
         // float a = dt * diff * (N - 2) * (N - 2);
         // lin_solve(b, x, x0, a, 1 + 6 * a, iter, shader);
     }

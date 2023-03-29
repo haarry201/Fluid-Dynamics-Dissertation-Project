@@ -2,7 +2,9 @@
 #pragma kernel CSMain
 #pragma kernel RenderD
 //#pragma kernel LinearSolver
-#pragma kernel Diffuse
+#pragma kernel Diffuse0
+#pragma kernel Diffuse1
+#pragma kernel Diffuse2
 #pragma kernel Project1
 #pragma kernel Project2
 #pragma kernel Advect
@@ -236,16 +238,55 @@ void SetBounds2 (uint3 id: SV_DispatchThreadID)
 
 
 [numthreads(16,16,1)]
-void Diffuse (uint3 id: SV_DispatchThreadID)
+void Diffuse0 (uint3 id: SV_DispatchThreadID)
 {
     int i = id.x;
     int j = id.y;
     float a = dt * diff * (N - 2) * (N - 2);
     float c = 1 + 6 * a;
-    //DiffuseSolver(i, j, a, c);
     for (int k = 0; k < iter; k++){
         x[id2Dto1D(int2(i, j))] = LinearSolver0(x[id2Dto1D(int2(i, j))], x0[id2Dto1D(int2(i, j))], x[id2Dto1D(int2(i + 1, j))], x[id2Dto1D(int2(i - 1, j))], x[id2Dto1D(int2(i, j + 1))], x[id2Dto1D(int2(i, j - 1))], a, c);
     }
+    x[id2Dto1D(int2(i, 0))] = x[id2Dto1D(int2(i, 1))];
+    x[id2Dto1D(int2(i, N - 1))] = x[id2Dto1D(int2(i, N - 2))];
+
+    x[id2Dto1D(int2(0, j))] = x[id2Dto1D(int2(1, j))];
+    x[id2Dto1D(int2(N - 1, j))] = x[id2Dto1D(int2(N - 2, j))];
+
+}
+
+[numthreads(16,16,1)]
+void Diffuse1 (uint3 id: SV_DispatchThreadID)
+{
+    int i = id.x;
+    int j = id.y;
+    float a = dt * diff * (N - 2) * (N - 2);
+    float c = 1 + 6 * a;
+    for (int k = 0; k < iter; k++){
+        x[id2Dto1D(int2(i, j))] = LinearSolver0(x[id2Dto1D(int2(i, j))], x0[id2Dto1D(int2(i, j))], x[id2Dto1D(int2(i + 1, j))], x[id2Dto1D(int2(i - 1, j))], x[id2Dto1D(int2(i, j + 1))], x[id2Dto1D(int2(i, j - 1))], a, c);
+    }
+    x[id2Dto1D(int2(i, 0))] = x[id2Dto1D(int2(i, 1))];
+    x[id2Dto1D(int2(i, N - 1))] = x[id2Dto1D(int2(i, N - 2))];
+
+    x[id2Dto1D(int2(0, j))] = -x[id2Dto1D(int2(1, j))];
+    x[id2Dto1D(int2(N - 1, j))] = -x[id2Dto1D(int2(N - 2, j))];
+}
+
+[numthreads(16,16,1)]
+void Diffuse2 (uint3 id: SV_DispatchThreadID)
+{
+    int i = id.x;
+    int j = id.y;
+    float a = dt * diff * (N - 2) * (N - 2);
+    float c = 1 + 6 * a;
+    for (int k = 0; k < iter; k++){
+        x[id2Dto1D(int2(i, j))] = LinearSolver0(x[id2Dto1D(int2(i, j))], x0[id2Dto1D(int2(i, j))], x[id2Dto1D(int2(i + 1, j))], x[id2Dto1D(int2(i - 1, j))], x[id2Dto1D(int2(i, j + 1))], x[id2Dto1D(int2(i, j - 1))], a, c);
+    }
+    x[id2Dto1D(int2(i, 0))] = -x[id2Dto1D(int2(i, 1))];
+    x[id2Dto1D(int2(i, N - 1))] = -x[id2Dto1D(int2(i, N - 2))];
+
+    x[id2Dto1D(int2(0, j))] = x[id2Dto1D(int2(1, j))];
+    x[id2Dto1D(int2(N - 1, j))] = x[id2Dto1D(int2(N - 2, j))];
 }
 
 
