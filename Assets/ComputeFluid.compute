@@ -5,8 +5,8 @@
 #pragma kernel Diffuse0
 #pragma kernel Diffuse1
 #pragma kernel Diffuse2
-#pragma kernel Project1
-#pragma kernel Project2
+#pragma kernel Project0
+
 #pragma kernel Advect
 #pragma kernel SetBounds0
 #pragma kernel SetBounds1
@@ -133,7 +133,7 @@ void RenderD (uint3 id : SV_DispatchThreadID)
 
 
 [numthreads(16,16,1)]
-void Project1 (uint3 id: SV_DispatchThreadID)
+void Project0 (uint3 id: SV_DispatchThreadID)
 {
     int i = id.x;
     int j = id.y;
@@ -147,23 +147,59 @@ void Project1 (uint3 id: SV_DispatchThreadID)
                   N;
                
                 p[id2Dto1D(int2(i, j))] = 0;
-}
 
 
+    //SET BOUNDS 0
+    p[id2Dto1D(int2(i, 0))] = p[id2Dto1D(int2(i, 1))];
+    p[id2Dto1D(int2(i, N - 1))] = p[id2Dto1D(int2(i, N - 2))];
 
-[numthreads(16,16,1)]
-void Project2 (uint3 id: SV_DispatchThreadID)
-{
-    int i = id.x;
-    int j = id.y;
-    
+    p[id2Dto1D(int2(0, j))] = p[id2Dto1D(int2(1, j))];
+    p[id2Dto1D(int2(N - 1, j))] = p[id2Dto1D(int2(N - 2, j))];
+
+    div[id2Dto1D(int2(i, 0))] = div[id2Dto1D(int2(i, 1))];
+    div[id2Dto1D(int2(i, N - 1))] = div[id2Dto1D(int2(i, N - 2))];
+
+    div[id2Dto1D(int2(0, j))] = div[id2Dto1D(int2(1, j))];
+    div[id2Dto1D(int2(N - 1, j))] = div[id2Dto1D(int2(N - 2, j))];
+
     for (int k = 0; k < iter; k++){
         p[id2Dto1D(int2(i, j))] = LinearSolver0(p[id2Dto1D(int2(i, j))], div[id2Dto1D(int2(i, j))], p[id2Dto1D(int2(i + 1, j))], p[id2Dto1D(int2(i - 1, j))], p[id2Dto1D(int2(i, j + 1))], p[id2Dto1D(int2(i, j - 1))], a, c);
     }
 
     velocX[id2Dto1D(int2(i, j))] -= 0.5f * (p[id2Dto1D(int2(i + 1, j))] - p[id2Dto1D(int2(i - 1, j))]) * N;
     velocY[id2Dto1D(int2(i, j))] -= 0.5f * (p[id2Dto1D(int2(i, j + 1))] - p[id2Dto1D(int2(i, j - 1))]) * N;
+
+    velocX[id2Dto1D(int2(i, 0))] = velocX[id2Dto1D(int2(i, 1))];
+    velocX[id2Dto1D(int2(i, N - 1))] = velocX[id2Dto1D(int2(i, N - 2))];
+
+    velocX[id2Dto1D(int2(0, j))] = -velocX[id2Dto1D(int2(1, j))];
+    velocX[id2Dto1D(int2(N - 1, j))] = -velocX[id2Dto1D(int2(N - 2, j))];
+
+    velocY[id2Dto1D(int2(i, 0))] = -velocY[id2Dto1D(int2(i, 1))];
+    velocY[id2Dto1D(int2(i, N - 1))] = -velocY[id2Dto1D(int2(i, N - 2))];
+
+    velocY[id2Dto1D(int2(0, j))] = velocY[id2Dto1D(int2(1, j))];
+    velocY[id2Dto1D(int2(N - 1, j))] = velocY[id2Dto1D(int2(N - 2, j))];
+
+
 }
+
+
+
+// [numthreads(16,16,1)]
+// void Project2 (uint3 id: SV_DispatchThreadID)
+// {
+//     int i = id.x;
+//     int j = id.y;
+    
+//     for (int k = 0; k < iter; k++){
+//         p[id2Dto1D(int2(i, j))] = LinearSolver0(p[id2Dto1D(int2(i, j))], div[id2Dto1D(int2(i, j))], p[id2Dto1D(int2(i + 1, j))], p[id2Dto1D(int2(i - 1, j))], p[id2Dto1D(int2(i, j + 1))], p[id2Dto1D(int2(i, j - 1))], a, c);
+//     }
+
+//     velocX[id2Dto1D(int2(i, j))] -= 0.5f * (p[id2Dto1D(int2(i + 1, j))] - p[id2Dto1D(int2(i - 1, j))]) * N;
+//     velocY[id2Dto1D(int2(i, j))] -= 0.5f * (p[id2Dto1D(int2(i, j + 1))] - p[id2Dto1D(int2(i, j - 1))]) * N;
+// }
+
 
 
 

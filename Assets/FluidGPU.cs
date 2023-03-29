@@ -214,9 +214,12 @@ public class FluidGPU {
 
     void Project(float[] velocX, float[] velocY, float[] p, float[] div, int iter, ComputeShader shader)
     {
-        
-        
-        int kernelHandle = shader.FindKernel("Project1");
+
+
+        int kernelHandle = shader.FindKernel("Project0");
+
+        float a = 1;
+        float c = 6;
 
         ComputeBuffer velocXBuffer = new ComputeBuffer(velocX.Length, 4);
         velocXBuffer.SetData(velocX);
@@ -225,6 +228,10 @@ public class FluidGPU {
         ComputeBuffer velocYBuffer = new ComputeBuffer(velocY.Length, 4);
         velocYBuffer.SetData(velocY);
         shader.SetBuffer(kernelHandle, "velocY", velocYBuffer);
+
+        shader.SetFloat("a", a);
+        shader.SetFloat("c", c);
+        shader.SetInt("iter", iter);
 
         ComputeBuffer pBuffer = new ComputeBuffer(p.Length, 4);
         pBuffer.SetData(p);
@@ -272,60 +279,80 @@ public class FluidGPU {
         //     }
         // }
         
-        set_bnd(0, div, shader);
-        set_bnd(0, p, shader);
+        // set_bnd(0, div, shader);
+        // set_bnd(0, p, shader);
         //lin_solve(0, p, div, 1, 6, iter, shader);
 
-        float a = 1;
-        float c = 6;
+         
 
-        int kernelHandle2 = shader.FindKernel("Project2");
+        // int kernelHandle2 = shader.FindKernel("Project2");
 
-        ComputeBuffer velocXBuffer2 = new ComputeBuffer(velocX.Length, 4);
-        velocXBuffer2.SetData(velocX);
-        shader.SetBuffer(kernelHandle2, "velocX", velocXBuffer2);
+        // ComputeBuffer velocXBuffer2 = new ComputeBuffer(velocX.Length, 4);
+        // velocXBuffer2.SetData(velocX);
+        // shader.SetBuffer(kernelHandle2, "velocX", velocXBuffer2);
 
-        ComputeBuffer velocYBuffer2 = new ComputeBuffer(velocY.Length, 4);
-        velocYBuffer2.SetData(velocY);
-        shader.SetBuffer(kernelHandle2, "velocY", velocYBuffer2);
+        // ComputeBuffer velocYBuffer2 = new ComputeBuffer(velocY.Length, 4);
+        // velocYBuffer2.SetData(velocY);
+        // shader.SetBuffer(kernelHandle2, "velocY", velocYBuffer2);
 
-        ComputeBuffer pBuffer2 = new ComputeBuffer(p.Length, 4);
-        pBuffer2.SetData(p);
-        shader.SetBuffer(kernelHandle2, "p", pBuffer2);
+        // ComputeBuffer pBuffer2 = new ComputeBuffer(p.Length, 4);
+        // pBuffer2.SetData(p);
+        // shader.SetBuffer(kernelHandle2, "p", pBuffer2);
 
-        ComputeBuffer divBuffer2 = new ComputeBuffer(div.Length, 4);
-        divBuffer2.SetData(div);
-        shader.SetBuffer(kernelHandle2, "div", divBuffer2);
+        // ComputeBuffer divBuffer2 = new ComputeBuffer(div.Length, 4);
+        // divBuffer2.SetData(div);
+        // shader.SetBuffer(kernelHandle2, "div", divBuffer2);
 
-        shader.SetFloat("a", a);
-        shader.SetFloat("c", c);
-        shader.SetInt("iter", iter);
+        // shader.SetFloat("a", a);
+        // shader.SetFloat("c", c);
+        // shader.SetInt("iter", iter);
 
-        shader.Dispatch(kernelHandle2, N/16, N/16, 1);
+        // shader.Dispatch(kernelHandle2, N/16, N/16, 1);
 
-        velocXBuffer2.GetData(velocX);
-        velocYBuffer2.GetData(velocY);
-        pBuffer2.GetData(p);
-
+        // velocXBuffer2.GetData(velocX);
+        // velocYBuffer2.GetData(velocY);
+        // pBuffer2.GetData(p);
 
 
 
-        // for (int j = 1; j < N - 1; j++)
-        // {
-        //     for (int i = 1; i < N - 1; i++)
-        //     {
-        //         velocX[IX(i, j)] -= 0.5f * (p[IX(i + 1, j)] - p[IX(i - 1, j)]) * N;
-        //         velocY[IX(i, j)] -= 0.5f * (p[IX(i, j + 1)] - p[IX(i, j - 1)]) * N;
-        //     }
-        // }
 
-        set_bnd(1, velocX, shader);
-        set_bnd(2, velocY, shader);
+        // // for (int j = 1; j < N - 1; j++)
+        // // {
+        // //     for (int i = 1; i < N - 1; i++)
+        // //     {
+        // //         velocX[IX(i, j)] -= 0.5f * (p[IX(i + 1, j)] - p[IX(i - 1, j)]) * N;
+        // //         velocY[IX(i, j)] -= 0.5f * (p[IX(i, j + 1)] - p[IX(i, j - 1)]) * N;
+        // //     }
+        // // }
 
-        velocXBuffer2.Dispose();
-        velocYBuffer2.Dispose();
-        pBuffer2.Dispose();
-        divBuffer2.Dispose();
+        // set_bnd(1, velocX, shader);
+        // set_bnd(2, velocY, shader);
+
+        // velocXBuffer2.Dispose();
+        // velocYBuffer2.Dispose();
+        // pBuffer2.Dispose();
+        // divBuffer2.Dispose();
+
+
+        p[IX(0, 0)] = 0.5f * (p[IX(1, 0)] + p[IX(0, 1)]);
+        p[IX(0, N - 1)] = 0.5f * (p[IX(1, N - 1)] + p[IX(0, N - 2)]);
+        p[IX(N - 1, 0)] = 0.5f * (p[IX(N - 2, 0)] + p[IX(N - 1, 1)]);
+        p[IX(N - 1, N - 1)] = 0.5f * (p[IX(N - 2, N - 1)] + p[IX(N - 1, N - 2)]);
+
+        div[IX(0, 0)] = 0.5f * (div[IX(1, 0)] + div[IX(0, 1)]);
+        div[IX(0, N - 1)] = 0.5f * (div[IX(1, N - 1)] + div[IX(0, N - 2)]);
+        div[IX(N - 1, 0)] = 0.5f * (div[IX(N - 2, 0)] + div[IX(N - 1, 1)]);
+        div[IX(N - 1, N - 1)] = 0.5f * (div[IX(N - 2, N - 1)] + div[IX(N - 1, N - 2)]);
+
+        velocX[IX(0, 0)] = 0.5f * (velocX[IX(1, 0)] + velocX[IX(0, 1)]);
+        velocX[IX(0, N - 1)] = 0.5f * (velocX[IX(1, N - 1)] + velocX[IX(0, N - 2)]);
+        velocX[IX(N - 1, 0)] = 0.5f * (velocX[IX(N - 2, 0)] + velocX[IX(N - 1, 1)]);
+        velocX[IX(N - 1, N - 1)] = 0.5f * (velocX[IX(N - 2, N - 1)] + velocX[IX(N - 1, N - 2)]);
+
+        velocY[IX(0, 0)] = 0.5f * (velocY[IX(1, 0)] + velocY[IX(0, 1)]);
+        velocY[IX(0, N - 1)] = 0.5f * (velocY[IX(1, N - 1)] + velocY[IX(0, N - 2)]);
+        velocY[IX(N - 1, 0)] = 0.5f * (velocY[IX(N - 2, 0)] + velocY[IX(N - 1, 1)]);
+        velocY[IX(N - 1, N - 1)] = 0.5f * (velocY[IX(N - 2, N - 1)] + velocY[IX(N - 1, N - 2)]);
 
     }
 
