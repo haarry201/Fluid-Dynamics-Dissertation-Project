@@ -305,8 +305,8 @@ void Advect0 (uint3 id: SV_DispatchThreadID)
     float NYfloat = N;
     float ifloat, jfloat;
 
-    int i = id.x;
-    int j = id.y;
+    int i = id.x + 1;
+    int j = id.y + 1;
 
     ifloat = (float)(i);
     jfloat = (float)(j);

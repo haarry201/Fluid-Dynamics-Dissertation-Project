@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class FluidGPU {
+public class FluidGPU1 {
 
     private Texture2D Image;
 
@@ -34,7 +34,7 @@ public class FluidGPU {
         return x + y * N;
     }
 
-    public FluidGPU(float diffusion, float viscosity, float dt, int size, int iterations)
+    public FluidGPU1(float diffusion, float viscosity, float dt, int size, int iterations)
     {
         N = size;
         iter = iterations;
@@ -78,40 +78,31 @@ public class FluidGPU {
     }
 
 
-    // public void TestSolver(ComputeShader shader)
-    // {
-    //     int b = 1;
-    //     float[] x = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    //     float[] x0 = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
-    //     float a = this.dt * this.visc * (N - 2) * (N - 2);
-    //     int iter = 16;
-    //     lin_solve(b, x, x0, a, 1 + 6 * a, iter, shader);
-    //     foreach(var item in x){
-    //         Debug.Log(item);
-    //     }
-    // }   
 
 
     public void RenderD(Texture2D Image, ComputeShader shader, RenderTexture tex)
     {
 
-        int kernelHandle = shader.FindKernel("RenderD");
+        for (int i = 0; i < N; i++)
+        {
+            for (int j = 0; j < N; j++)
+            {   
+                int x = (int)i;
+                int y = (int)j;
+                float d = this.density[IX(i, j)];
+                //if(d>0f){
+                    //Color color = new Color(1/(3*d), 1/(4*d), 1/d, d);
+                    Color color = new Color(d, d, d, d);
+                //}
+                // else{
+                //     Color color = new Color(0, 0, 0, 0);
+                // }
 
-
-        ComputeBuffer buffer = new ComputeBuffer(this.density.Length, 4);
-        buffer.SetData(this.density);
-        shader.SetBuffer(kernelHandle, "density", buffer);
-
-        shader.SetTexture(kernelHandle, "Result", tex);
-        shader.SetInt("N", N);
-
-        shader.Dispatch(kernelHandle, (N/16)+1, (N/16)+1, 1);
-        buffer.Dispose();
-        
-        RenderTexture.active = tex;
-        Image.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+                
+                Image.SetPixel(x, y, color);
+            }
+        }
         Image.Apply();
-
 
 
     }
@@ -147,7 +138,6 @@ public class FluidGPU {
 
     void Diffuse(int b, float[] x, float[] x0, float diff, float dt, int iter, ComputeShader shader)
     {
-        
         int kernelHandle = shader.FindKernel("Diffuse0");
         if (b == 1){ kernelHandle = shader.FindKernel("Diffuse1");}
         if (b == 2){ kernelHandle = shader.FindKernel("Diffuse2");}
@@ -179,43 +169,30 @@ public class FluidGPU {
         x[IX(0, N - 1)] = 0.5f * (x[IX(1, N - 1)] + x[IX(0, N - 2)]);
         x[IX(N - 1, 0)] = 0.5f * (x[IX(N - 2, 0)] + x[IX(N - 1, 1)]);
         x[IX(N - 1, N - 1)] = 0.5f * (x[IX(N - 2, N - 1)] + x[IX(N - 1, N - 2)]);
-
-        
-
-        //set_bnd(b, x, shader);
-        // float a = dt * diff * (N - 2) * (N - 2);
-        // lin_solve(b, x, x0, a, 1 + 6 * a, iter, shader);
     }
 
 
         public void lin_solve(int b, float[] x, float[] x0, float a, float c, int iter, ComputeShader shader)
     {
 
-        int kernelHandle = shader.FindKernel("LinearSolver");
-
-
-
-        ComputeBuffer x0Buffer = new ComputeBuffer(x0.Length, 4);
-        x0Buffer.SetData(x0);
-        shader.SetBuffer(kernelHandle, "x0", x0Buffer);
-
-        ComputeBuffer xBuffer = new ComputeBuffer(x.Length, 4);
-        xBuffer.SetData(x);
-        shader.SetBuffer(kernelHandle, "x", xBuffer);
-
-        shader.SetInt("b", b);
-        shader.SetFloat("a", a);
-        shader.SetFloat("c", c);
-        shader.SetInt("iter", iter);
-
-        shader.Dispatch(kernelHandle, (N/16)+1, (N/16)+1, 1);
-
-        x0Buffer.GetData(x0);
-        xBuffer.GetData(x);
-
-        x0Buffer.Dispose();
-        xBuffer.Dispose();
-    
+        float cRecip = (float)1f / c;
+        for (int k = 0; k < iter; k++)
+        {
+            for (int j = 1; j < N - 1; j++)
+            {
+                for (int i = 1; i < N - 1; i++)
+                {
+                    x[IX(i, j)] =
+                      (x0[IX(i, j)]
+                      + a *
+                      (x[IX(i + 1, j)]
+                      + x[IX(i - 1, j)]
+                      + x[IX(i, j + 1)]
+                      + x[IX(i, j - 1)]
+                      )) * cRecip;
+                }
+            }
+        }
         set_bnd(b, x, shader);
     }
 
@@ -223,77 +200,7 @@ public class FluidGPU {
 
     void Project(float[] velocX, float[] velocY, float[] p, float[] div, int iter, ComputeShader shader)
     {
-        
 
-
-        // int kernelHandle = shader.FindKernel("Project0");
-
-        // float a = 1;
-        // float c = 6;
-
-        // ComputeBuffer velocXBuffer = new ComputeBuffer(velocX.Length, 4);
-        // velocXBuffer.SetData(velocX);
-        // shader.SetBuffer(kernelHandle, "velocX", velocXBuffer);
-
-        // ComputeBuffer velocYBuffer = new ComputeBuffer(velocY.Length, 4);
-        // velocYBuffer.SetData(velocY);
-        // shader.SetBuffer(kernelHandle, "velocY", velocYBuffer);
-
-        // shader.SetFloat("a", a);
-        // shader.SetFloat("c", c);
-        // shader.SetInt("iter", iter);
-
-        // ComputeBuffer pBuffer = new ComputeBuffer(p.Length, 4);
-        // pBuffer.SetData(p);
-        // shader.SetBuffer(kernelHandle, "p", pBuffer);
-
-        // ComputeBuffer divBuffer = new ComputeBuffer(div.Length, 4);
-        // divBuffer.SetData(div);
-        // shader.SetBuffer(kernelHandle, "div", divBuffer);
-
-        // shader.SetInt("N", N);
-
-        // shader.Dispatch(kernelHandle, N/16, N/16, 1);
-
-        // velocXBuffer.GetData(velocX);
-        // velocYBuffer.GetData(velocY);
-        // pBuffer.GetData(p);
-        // divBuffer.GetData(div);
-
-        // velocXBuffer.Dispose();
-        // velocYBuffer.Dispose();
-        // pBuffer.Dispose();
-        // divBuffer.Dispose();
-
-        
-        // p[IX(0, 0)] = 0.5f * (p[IX(1, 0)] + p[IX(0, 1)]);
-        // p[IX(0, N - 1)] = 0.5f * (p[IX(1, N - 1)] + p[IX(0, N - 2)]);
-        // p[IX(N - 1, 0)] = 0.5f * (p[IX(N - 2, 0)] + p[IX(N - 1, 1)]);
-        // p[IX(N - 1, N - 1)] = 0.5f * (p[IX(N - 2, N - 1)] + p[IX(N - 1, N - 2)]);
-
-        // div[IX(0, 0)] = 0.5f * (div[IX(1, 0)] + div[IX(0, 1)]);
-        // div[IX(0, N - 1)] = 0.5f * (div[IX(1, N - 1)] + div[IX(0, N - 2)]);
-        // div[IX(N - 1, 0)] = 0.5f * (div[IX(N - 2, 0)] + div[IX(N - 1, 1)]);
-        // div[IX(N - 1, N - 1)] = 0.5f * (div[IX(N - 2, N - 1)] + div[IX(N - 1, N - 2)]);
-
-        // velocX[IX(0, 0)] = 0.5f * (velocX[IX(1, 0)] + velocX[IX(0, 1)]);
-        // velocX[IX(0, N - 1)] = 0.5f * (velocX[IX(1, N - 1)] + velocX[IX(0, N - 2)]);
-        // velocX[IX(N - 1, 0)] = 0.5f * (velocX[IX(N - 2, 0)] + velocX[IX(N - 1, 1)]);
-        // velocX[IX(N - 1, N - 1)] = 0.5f * (velocX[IX(N - 2, N - 1)] + velocX[IX(N - 1, N - 2)]);
-
-        // velocY[IX(0, 0)] = 0.5f * (velocY[IX(1, 0)] + velocY[IX(0, 1)]);
-        // velocY[IX(0, N - 1)] = 0.5f * (velocY[IX(1, N - 1)] + velocY[IX(0, N - 2)]);
-        // velocY[IX(N - 1, 0)] = 0.5f * (velocY[IX(N - 2, 0)] + velocY[IX(N - 1, 1)]);
-        // velocY[IX(N - 1, N - 1)] = 0.5f * (velocY[IX(N - 2, N - 1)] + velocY[IX(N - 1, N - 2)]);
-
-        
-
-        
-
-        
-        
-        
-        
         
         for (int j = 1; j < N - 1; j++)
         {
@@ -332,45 +239,6 @@ public class FluidGPU {
 
         set_bnd(1, velocX, shader);
         set_bnd(2, velocY, shader);
-
-         
-
-        // int kernelHandle2 = shader.FindKernel("Project2");
-
-        // ComputeBuffer velocXBuffer2 = new ComputeBuffer(velocX.Length, 4);
-        // velocXBuffer2.SetData(velocX);
-        // shader.SetBuffer(kernelHandle2, "velocX", velocXBuffer2);
-
-        // ComputeBuffer velocYBuffer2 = new ComputeBuffer(velocY.Length, 4);
-        // velocYBuffer2.SetData(velocY);
-        // shader.SetBuffer(kernelHandle2, "velocY", velocYBuffer2);
-
-        // ComputeBuffer pBuffer2 = new ComputeBuffer(p.Length, 4);
-        // pBuffer2.SetData(p);
-        // shader.SetBuffer(kernelHandle2, "p", pBuffer2);
-
-        // ComputeBuffer divBuffer2 = new ComputeBuffer(div.Length, 4);
-        // divBuffer2.SetData(div);
-        // shader.SetBuffer(kernelHandle2, "div", divBuffer2);
-
-        // shader.SetFloat("a", a);
-        // shader.SetFloat("c", c);
-        // shader.SetInt("iter", iter);
-
-        // shader.Dispatch(kernelHandle2, N/16, N/16, 1);
-
-        // velocXBuffer2.GetData(velocX);
-        // velocYBuffer2.GetData(velocY);
-        // pBuffer2.GetData(p);
-
-
-
-        // velocXBuffer2.Dispose();
-        // velocYBuffer2.Dispose();
-        // pBuffer2.Dispose();
-        // divBuffer2.Dispose();
-
-
 
     }
 
@@ -425,7 +293,75 @@ public class FluidGPU {
         d[IX(N - 1, N - 1)] = 0.5f * (d[IX(N - 2, N - 1)] + d[IX(N - 1, N - 2)]);
 
 
+
+
+
+
+
+
+        // float i0, i1, j0, j1;
+
+        // float dtx = dt * (N - 2);
+        // float dty = dt * (N - 2);
+
+        // float s0, s1, t0, t1;
+        // float tmp1, tmp2, x, y;
+
+        // float NXfloat = N;
+        // float NYfloat = N;
+        // float ifloat, jfloat;
+        // int i, j;
+
+        // for (j = 1, jfloat = 1; j < N - 1; j++, jfloat++)
+        // {
+        //     for (i = 1, ifloat = 1; i < N - 1; i++, ifloat++)
+        //     {
+        //         tmp1 = dtx * velocX[IX(i, j)];
+        //         tmp2 = dty * velocY[IX(i, j)];
+        //         x = ifloat - tmp1;
+        //         y = jfloat - tmp2;
+
+        //         if (x < 0.5f) x = 0.5f;
+        //         if (x > NXfloat + 0.5f) x = NXfloat + 0.5f;
+        //         i0 = (float)Math.Floor(x);
+        //         i1 = i0 + 1.0f;
+        //         if (y < 0.5f) y = 0.5f;
+        //         if (y > NYfloat + 0.5f) y = NYfloat + 0.5f;
+        //         j0 = (float)Math.Floor(y);
+        //         j1 = j0 + 1.0f;
+
+        //         s1 = x - i0;
+        //         s0 = 1.0f - s1;
+        //         t1 = y - j0;
+        //         t0 = 1.0f - t1;
+
+        //         int i0i = (int)(i0);
+        //         int i1i = (int)(i1);
+        //         int j0i = (int)(j0);
+        //         int j1i = (int)(j1);
+
+        //         d[IX(i, j)] =
+        //           s0 * (t0 * d0[IX(i0i, j0i)] + t1 * d0[IX(i0i, j1i)]) +
+        //           s1 * (t0 * d0[IX(i1i, j0i)] + t1 * d0[IX(i1i, j1i)]);
+        //     }
+        // }
+
+        // set_bnd(b, d, shader);
+
+
+
     }
+
+
+    /*public void fade(int amount)
+    {
+        for (int i = 0; i < density.Length; i++)
+        {
+            density[i] -= density[i] / amount;
+        }
+    }
+*/
+
 
 
     void set_bnd(int b, float[] x, ComputeShader shader)
