@@ -10,7 +10,7 @@ public class PainterGPU : MonoBehaviour
     private FluidGPU fluid;
     float scale;
     public GameObject plane;
-    public int N = 64;
+    public int N;
     Vector3 lastpos;
     Vector3 delta;
     public int dAmount;

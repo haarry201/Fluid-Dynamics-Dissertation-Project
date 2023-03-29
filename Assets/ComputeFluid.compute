@@ -1,13 +1,15 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel CSMain
 #pragma kernel RenderD
-//#pragma kernel LinearSolver
+#pragma kernel LinearSolver
 #pragma kernel Diffuse0
 #pragma kernel Diffuse1
 #pragma kernel Diffuse2
 #pragma kernel Project0
 
-#pragma kernel Advect
+#pragma kernel Advect0
+#pragma kernel Advect1
+#pragma kernel Advect2
 #pragma kernel SetBounds0
 #pragma kernel SetBounds1
 #pragma kernel SetBounds2
@@ -101,32 +103,29 @@ void RenderD (uint3 id : SV_DispatchThreadID)
         float d = density[id2Dto1D(int2(x, y))];
         color = float4(d, d, d, d);
         Result[id.xy] = color;
-    
-    //int x = id.x / resolution;
-    //int y = id.y / resolution;
+        
 }
 
 
-// [numthreads(16,16,1)]
-// void LinearSolver (uint3 id: SV_DispatchThreadID)
-// {
-//     int i = id.x;
-//     int j = id.y;
-//     float cRecip = (float)1 / c;
+[numthreads(16,16,1)]
+void LinearSolver (uint3 id: SV_DispatchThreadID)
+{
+    int i = id.x;
+    int j = id.y;
+    float cRecip = (float)1 / c;
     
-//     for (int k = 0; k < iter; k++){
-//         x[id2Dto1D(int2(i, j))] =
-//         (x0[id2Dto1D(int2(i, j))]
-//         + a *
-//         (x[id2Dto1D(int2(i + 1, j))]
-//         + x[id2Dto1D(int2(i - 1, j))]
-//         + x[id2Dto1D(int2(i, j + 1))]
-//         + x[id2Dto1D(int2(i, j - 1))]
-//         )) * cRecip;
-//     }
+    for (int k = 0; k < iter; k++){
+        x[id2Dto1D(int2(i, j))] =
+        (x0[id2Dto1D(int2(i, j))]
+        + a *
+        (x[id2Dto1D(int2(i + 1, j))]
+        + x[id2Dto1D(int2(i - 1, j))]
+        + x[id2Dto1D(int2(i, j + 1))]
+        + x[id2Dto1D(int2(i, j - 1))]
+        )) * cRecip;
+    }
                 
-// }
-
+}
 
 
 
@@ -186,23 +185,6 @@ void Project0 (uint3 id: SV_DispatchThreadID)
 
 
 
-// [numthreads(16,16,1)]
-// void Project2 (uint3 id: SV_DispatchThreadID)
-// {
-//     int i = id.x;
-//     int j = id.y;
-    
-//     for (int k = 0; k < iter; k++){
-//         p[id2Dto1D(int2(i, j))] = LinearSolver0(p[id2Dto1D(int2(i, j))], div[id2Dto1D(int2(i, j))], p[id2Dto1D(int2(i + 1, j))], p[id2Dto1D(int2(i - 1, j))], p[id2Dto1D(int2(i, j + 1))], p[id2Dto1D(int2(i, j - 1))], a, c);
-//     }
-
-//     velocX[id2Dto1D(int2(i, j))] -= 0.5f * (p[id2Dto1D(int2(i + 1, j))] - p[id2Dto1D(int2(i - 1, j))]) * N;
-//     velocY[id2Dto1D(int2(i, j))] -= 0.5f * (p[id2Dto1D(int2(i, j + 1))] - p[id2Dto1D(int2(i, j - 1))]) * N;
-// }
-
-
-
-
 
 [numthreads(16,16,1)]
 void SetBounds0 (uint3 id: SV_DispatchThreadID)
@@ -250,25 +232,6 @@ void SetBounds2 (uint3 id: SV_DispatchThreadID)
 
 
 }
-
-
-
-// void DiffuseSolver(int i, int j, float a, float c)
-// {
-
-//     float cRecip = 1 / c;
-    
-//     for (int k = 0; k < iter; k++){
-//         x[id2Dto1D(int2(i, j))] =
-//         (x0[id2Dto1D(int2(i, j))]
-//         + a *
-//         (x[id2Dto1D(int2(i + 1, j))]
-//         + x[id2Dto1D(int2(i - 1, j))]
-//         + x[id2Dto1D(int2(i, j + 1))]
-//         + x[id2Dto1D(int2(i, j - 1))]
-//         )) * cRecip;
-//     }
-// }
 
 
 
@@ -328,7 +291,7 @@ void Diffuse2 (uint3 id: SV_DispatchThreadID)
 
 
 [numthreads(16,16,1)]
-void Advect (uint3 id: SV_DispatchThreadID)
+void Advect0 (uint3 id: SV_DispatchThreadID)
 {
     float i0, i1, j0, j1;
 
@@ -376,40 +339,137 @@ void Advect (uint3 id: SV_DispatchThreadID)
     d[id2Dto1D(int2(i, j))] =
         s0 * (t0 * d0[id2Dto1D(int2(i0i, j0i))] + t1 * d0[id2Dto1D(int2(i0i, j1i))]) +
         s1 * (t0 * d0[id2Dto1D(int2(i1i, j0i))] + t1 * d0[id2Dto1D(int2(i1i, j1i))]);
+
+    d[id2Dto1D(int2(i, 0))] = d[id2Dto1D(int2(i, 1))];
+    d[id2Dto1D(int2(i, N - 1))] = d[id2Dto1D(int2(i, N - 2))];
+
+    d[id2Dto1D(int2(0, j))] = d[id2Dto1D(int2(1, j))];
+    d[id2Dto1D(int2(N - 1, j))] = d[id2Dto1D(int2(N - 2, j))];
+    
+
+}
+
+[numthreads(16,16,1)]
+void Advect1 (uint3 id: SV_DispatchThreadID)
+{
+    float i0, i1, j0, j1;
+
+    float dtx = dt * (N - 2);
+    float dty = dt * (N - 2);
+
+    float s0, s1, t0, t1;
+    float tmp1, tmp2, x, y;
+
+    float NXfloat = N;
+    float NYfloat = N;
+    float ifloat, jfloat;
+
+    int i = id.x;
+    int j = id.y;
+
+    ifloat = (float)(i);
+    jfloat = (float)(j);
+
+
+    tmp1 = dtx * velocX[id2Dto1D(int2(i, j))];
+    tmp2 = dty * velocY[id2Dto1D(int2(i, j))];
+    x = ifloat - tmp1;
+    y = jfloat - tmp2;
+
+    if (x < 0.5f) x = 0.5f;
+    if (x > NXfloat + 0.5f) x = NXfloat + 0.5f;
+    i0 = (float)floor(x);
+    i1 = i0 + 1.0f;
+    if (y < 0.5f) y = 0.5f;
+    if (y > NYfloat + 0.5f) y = NYfloat + 0.5f;
+    j0 = (float)floor(y);
+    j1 = j0 + 1.0f;
+
+    s1 = x - i0;
+    s0 = 1.0f - s1;
+    t1 = y - j0;
+    t0 = 1.0f - t1;
+
+    int i0i = (int)(i0);
+    int i1i = (int)(i1);
+    int j0i = (int)(j0);
+    int j1i = (int)(j1);
+
+    d[id2Dto1D(int2(i, j))] =
+        s0 * (t0 * d0[id2Dto1D(int2(i0i, j0i))] + t1 * d0[id2Dto1D(int2(i0i, j1i))]) +
+        s1 * (t0 * d0[id2Dto1D(int2(i1i, j0i))] + t1 * d0[id2Dto1D(int2(i1i, j1i))]);
+
+    d[id2Dto1D(int2(i, 0))] = d[id2Dto1D(int2(i, 1))];
+    d[id2Dto1D(int2(i, N - 1))] = d[id2Dto1D(int2(i, N - 2))];
+
+    d[id2Dto1D(int2(0, j))] = -d[id2Dto1D(int2(1, j))];
+    d[id2Dto1D(int2(N - 1, j))] = -d[id2Dto1D(int2(N - 2, j))];
+
 }
 
 
-// [numthreads(16,16,1)]
-// void SetBounds (uint3 id: SV_DispatchThreadID)
-// {
-//     int i = id.x;
-//     int j = id.y;
+
+[numthreads(16,16,1)]
+void Advect2 (uint3 id: SV_DispatchThreadID)
+{
+    float i0, i1, j0, j1;
+
+    float dtx = dt * (N - 2);
+    float dty = dt * (N - 2);
+
+    float s0, s1, t0, t1;
+    float tmp1, tmp2, x, y;
+
+    float NXfloat = N;
+    float NYfloat = N;
+    float ifloat, jfloat;
+
+    int i = id.x;
+    int j = id.y;
+
+    ifloat = (float)(i);
+    jfloat = (float)(j);
 
 
-//     if (b==2){
-//         x[id2Dto1D(int2(i, 0))] = -x[id2Dto1D(int2(i, 1))];
-//         x[id2Dto1D(int2(i, N - 1))] = -x[id2Dto1D(int2(i, N - 2))];
-//     }
-//     else{
-//         x[id2Dto1D(int2(i, 0))] = x[id2Dto1D(int2(i, 1))];
-//         x[id2Dto1D(int2(i, N - 1))] = x[id2Dto1D(int2(i, N - 2))];
-//     }
+    tmp1 = dtx * velocX[id2Dto1D(int2(i, j))];
+    tmp2 = dty * velocY[id2Dto1D(int2(i, j))];
+    x = ifloat - tmp1;
+    y = jfloat - tmp2;
 
-//     if (b==1){
-//         x[id2Dto1D(int2(0, j))] = -x[id2Dto1D(int2(1, j))];
-//         x[id2Dto1D(int2(N - 1, j))] = -x[id2Dto1D(int2(N - 2, j))];
-//     }
-//     else{
-//         x[id2Dto1D(int2(0, j))] = x[id2Dto1D(int2(1, j))];
-//         x[id2Dto1D(int2(N - 1, j))] = x[id2Dto1D(int2(N - 2, j))];
-//     }
+    if (x < 0.5f) x = 0.5f;
+    if (x > NXfloat + 0.5f) x = NXfloat + 0.5f;
+    i0 = (float)floor(x);
+    i1 = i0 + 1.0f;
+    if (y < 0.5f) y = 0.5f;
+    if (y > NYfloat + 0.5f) y = NYfloat + 0.5f;
+    j0 = (float)floor(y);
+    j1 = j0 + 1.0f;
 
-//     x[id2Dto1D(int2(0, 0))] = 0.5f * (x[id2Dto1D(int2(1, 0))] + x[id2Dto1D(int2(0, 1))]);
-//     x[id2Dto1D(int2(0, N - 1))] = 0.5f * (x[id2Dto1D(int2(1, N - 1))] + x[id2Dto1D(int2(0, N - 2))]);
-//     x[id2Dto1D(int2(N - 1, 0))] = 0.5f * (x[id2Dto1D(int2(N - 2, 0))] + x[id2Dto1D(int2(N - 1, 1))]);
-//     x[id2Dto1D(int2(N - 1, N - 1))] = 0.5f * (x[id2Dto1D(int2(N - 2, N - 1))] + x[id2Dto1D(int2(N - 1, N - 2))]);
+    s1 = x - i0;
+    s0 = 1.0f - s1;
+    t1 = y - j0;
+    t0 = 1.0f - t1;
 
-// }
+    int i0i = (int)(i0);
+    int i1i = (int)(i1);
+    int j0i = (int)(j0);
+    int j1i = (int)(j1);
+
+    d[id2Dto1D(int2(i, j))] =
+        s0 * (t0 * d0[id2Dto1D(int2(i0i, j0i))] + t1 * d0[id2Dto1D(int2(i0i, j1i))]) +
+        s1 * (t0 * d0[id2Dto1D(int2(i1i, j0i))] + t1 * d0[id2Dto1D(int2(i1i, j1i))]);
+
+
+    d[id2Dto1D(int2(i, 0))] = -d[id2Dto1D(int2(i, 1))];
+    d[id2Dto1D(int2(i, N - 1))] = -d[id2Dto1D(int2(i, N - 2))];
+
+    d[id2Dto1D(int2(0, j))] = d[id2Dto1D(int2(1, j))];
+    d[id2Dto1D(int2(N - 1, j))] = d[id2Dto1D(int2(N - 2, j))];
+
+}
+
+
+
 
 
 
