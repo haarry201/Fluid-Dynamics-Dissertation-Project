@@ -414,7 +414,8 @@ public class FluidGPU {
 
     void set_bnd(int b, float[] x, ComputeShader shader)
     {
-        // int kernelHandle = shader.FindKernel("SetBounds");
+        // int kernelHandle = b == 1 ? kernelHandle = shader.FindKernel("SetBounds1") : kernelHandle = shader.FindKernel("SetBounds0");
+        // kernelHandle = b == 2 ? kernelHandle = shader.FindKernel("SetBounds2") : kernelHandle = shader.FindKernel("SetBounds0");
 
         // ComputeBuffer xBuffer = new ComputeBuffer(x.Length, 4);
         // xBuffer.SetData(x);
@@ -427,7 +428,8 @@ public class FluidGPU {
         // xBuffer.GetData(x);
 
 
-
+        // xBuffer.Dispose();
+        
 
         for (int i = 1; i < N - 1; i++)
         {

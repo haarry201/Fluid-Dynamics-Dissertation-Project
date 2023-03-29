@@ -235,8 +235,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   plane: {fileID: 401663460}
-  N: 80
-  dAmount: 255
+  N: 400
+  dAmount: 1000
   densityWidth: 0
   iterations: 16
   shader: {fileID: 7200000, guid: 2e85cc0354a5e5347a8ab0f275edaedd, type: 3}
