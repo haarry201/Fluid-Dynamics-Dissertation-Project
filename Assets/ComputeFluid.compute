@@ -1,7 +1,7 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel CSMain
 #pragma kernel RenderD
-#pragma kernel LinearSolver
+//#pragma kernel LinearSolver
 #pragma kernel Diffuse
 #pragma kernel Project1
 #pragma kernel Project2
@@ -69,6 +69,20 @@ int id2Dto1D(int2 m_coord)
 
 
 
+float LinearSolver0 (float xij, float x0ij, float xi1j, float xim1j, float xij1, float xijm1, float a, float c)
+{
+    float cRecip = (float)1 / c;
+    
+    
+    xij = (x0ij + a * (xi1j + xim1j + xij1 + xijm1)) * cRecip;
+    
+    return xij;
+                
+}
+
+
+
+
 [numthreads(16,16,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
@@ -91,25 +105,30 @@ void RenderD (uint3 id : SV_DispatchThreadID)
 }
 
 
-[numthreads(16,16,1)]
-void LinearSolver (uint3 id: SV_DispatchThreadID)
-{
-    int i = id.x;
-    int j = id.y;
-    float cRecip = (float)1 / c;
+// [numthreads(16,16,1)]
+// void LinearSolver (uint3 id: SV_DispatchThreadID)
+// {
+//     int i = id.x;
+//     int j = id.y;
+//     float cRecip = (float)1 / c;
     
-    for (int k = 0; k < iter; k++){
-        x[id2Dto1D(int2(i, j))] =
-        (x0[id2Dto1D(int2(i, j))]
-        + a *
-        (x[id2Dto1D(int2(i + 1, j))]
-        + x[id2Dto1D(int2(i - 1, j))]
-        + x[id2Dto1D(int2(i, j + 1))]
-        + x[id2Dto1D(int2(i, j - 1))]
-        )) * cRecip;
-    }
+//     for (int k = 0; k < iter; k++){
+//         x[id2Dto1D(int2(i, j))] =
+//         (x0[id2Dto1D(int2(i, j))]
+//         + a *
+//         (x[id2Dto1D(int2(i + 1, j))]
+//         + x[id2Dto1D(int2(i - 1, j))]
+//         + x[id2Dto1D(int2(i, j + 1))]
+//         + x[id2Dto1D(int2(i, j - 1))]
+//         )) * cRecip;
+//     }
                 
-}
+// }
+
+
+
+
+
 
 [numthreads(16,16,1)]
 void Project1 (uint3 id: SV_DispatchThreadID)
@@ -135,6 +154,11 @@ void Project2 (uint3 id: SV_DispatchThreadID)
 {
     int i = id.x;
     int j = id.y;
+    
+    for (int k = 0; k < iter; k++){
+        p[id2Dto1D(int2(i, j))] = LinearSolver0(p[id2Dto1D(int2(i, j))], div[id2Dto1D(int2(i, j))], p[id2Dto1D(int2(i + 1, j))], p[id2Dto1D(int2(i - 1, j))], p[id2Dto1D(int2(i, j + 1))], p[id2Dto1D(int2(i, j - 1))], a, c);
+    }
+
     velocX[id2Dto1D(int2(i, j))] -= 0.5f * (p[id2Dto1D(int2(i + 1, j))] - p[id2Dto1D(int2(i - 1, j))]) * N;
     velocY[id2Dto1D(int2(i, j))] -= 0.5f * (p[id2Dto1D(int2(i, j + 1))] - p[id2Dto1D(int2(i, j - 1))]) * N;
 }
@@ -191,39 +215,25 @@ void SetBounds2 (uint3 id: SV_DispatchThreadID)
 
 
 
+// void DiffuseSolver(int i, int j, float a, float c)
+// {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void DiffuseSolver(int i, int j, float a, float c)
-{
-
-    float cRecip = 1 / c;
+//     float cRecip = 1 / c;
     
-    for (int k = 0; k < iter; k++){
-        x[id2Dto1D(int2(i, j))] =
-        (x0[id2Dto1D(int2(i, j))]
-        + a *
-        (x[id2Dto1D(int2(i + 1, j))]
-        + x[id2Dto1D(int2(i - 1, j))]
-        + x[id2Dto1D(int2(i, j + 1))]
-        + x[id2Dto1D(int2(i, j - 1))]
-        )) * cRecip;
-    }
-}
+//     for (int k = 0; k < iter; k++){
+//         x[id2Dto1D(int2(i, j))] =
+//         (x0[id2Dto1D(int2(i, j))]
+//         + a *
+//         (x[id2Dto1D(int2(i + 1, j))]
+//         + x[id2Dto1D(int2(i - 1, j))]
+//         + x[id2Dto1D(int2(i, j + 1))]
+//         + x[id2Dto1D(int2(i, j - 1))]
+//         )) * cRecip;
+//     }
+// }
+
+
+
 
 [numthreads(16,16,1)]
 void Diffuse (uint3 id: SV_DispatchThreadID)
@@ -232,7 +242,10 @@ void Diffuse (uint3 id: SV_DispatchThreadID)
     int j = id.y;
     float a = dt * diff * (N - 2) * (N - 2);
     float c = 1 + 6 * a;
-    DiffuseSolver(i, j, a, c);
+    //DiffuseSolver(i, j, a, c);
+    for (int k = 0; k < iter; k++){
+        x[id2Dto1D(int2(i, j))] = LinearSolver0(x[id2Dto1D(int2(i, j))], x0[id2Dto1D(int2(i, j))], x[id2Dto1D(int2(i + 1, j))], x[id2Dto1D(int2(i - 1, j))], x[id2Dto1D(int2(i, j + 1))], x[id2Dto1D(int2(i, j - 1))], a, c);
+    }
 }
 
 

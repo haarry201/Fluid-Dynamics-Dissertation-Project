@@ -78,18 +78,18 @@ public class FluidGPU {
     }
 
 
-    public void TestSolver(ComputeShader shader)
-    {
-        int b = 1;
-        float[] x = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-        float[] x0 = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
-        float a = this.dt * this.visc * (N - 2) * (N - 2);
-        int iter = 16;
-        lin_solve(b, x, x0, a, 1 + 6 * a, iter, shader);
-        foreach(var item in x){
-            Debug.Log(item);
-        }
-    }   
+    // public void TestSolver(ComputeShader shader)
+    // {
+    //     int b = 1;
+    //     float[] x = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    //     float[] x0 = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
+    //     float a = this.dt * this.visc * (N - 2) * (N - 2);
+    //     int iter = 16;
+    //     lin_solve(b, x, x0, a, 1 + 6 * a, iter, shader);
+    //     foreach(var item in x){
+    //         Debug.Log(item);
+    //     }
+    // }   
 
 
     public void RenderD(Texture2D Image, ComputeShader shader, RenderTexture tex)
@@ -171,36 +171,36 @@ public class FluidGPU {
     }
 
 
-        public void lin_solve(int b, float[] x, float[] x0, float a, float c, int iter, ComputeShader shader)
-    {
+    //     public void lin_solve(int b, float[] x, float[] x0, float a, float c, int iter, ComputeShader shader)
+    // {
 
-        int kernelHandle = shader.FindKernel("LinearSolver");
+    //     int kernelHandle = shader.FindKernel("LinearSolver");
 
 
 
-        ComputeBuffer x0Buffer = new ComputeBuffer(x0.Length, 4);
-        x0Buffer.SetData(x0);
-        shader.SetBuffer(kernelHandle, "x0", x0Buffer);
+    //     ComputeBuffer x0Buffer = new ComputeBuffer(x0.Length, 4);
+    //     x0Buffer.SetData(x0);
+    //     shader.SetBuffer(kernelHandle, "x0", x0Buffer);
 
-        ComputeBuffer xBuffer = new ComputeBuffer(x.Length, 4);
-        xBuffer.SetData(x);
-        shader.SetBuffer(kernelHandle, "x", xBuffer);
+    //     ComputeBuffer xBuffer = new ComputeBuffer(x.Length, 4);
+    //     xBuffer.SetData(x);
+    //     shader.SetBuffer(kernelHandle, "x", xBuffer);
 
-        shader.SetInt("b", b);
-        shader.SetFloat("a", a);
-        shader.SetFloat("c", c);
-        shader.SetInt("iter", iter);
+    //     shader.SetInt("b", b);
+    //     shader.SetFloat("a", a);
+    //     shader.SetFloat("c", c);
+    //     shader.SetInt("iter", iter);
 
-        shader.Dispatch(kernelHandle, N/16, N/16, 1);
+    //     shader.Dispatch(kernelHandle, N/16, N/16, 1);
 
-        x0Buffer.GetData(x0);
-        xBuffer.GetData(x);
+    //     x0Buffer.GetData(x0);
+    //     xBuffer.GetData(x);
 
-        x0Buffer.Dispose();
-        xBuffer.Dispose();
+    //     x0Buffer.Dispose();
+    //     xBuffer.Dispose();
     
-        set_bnd(b, x, shader);
-    }
+    //     set_bnd(b, x, shader);
+    // }
 
 
 
@@ -266,7 +266,10 @@ public class FluidGPU {
         
         set_bnd(0, div, shader);
         set_bnd(0, p, shader);
-        lin_solve(0, p, div, 1, 6, iter, shader);
+        //lin_solve(0, p, div, 1, 6, iter, shader);
+
+        float a = 1;
+        float c = 6;
 
         int kernelHandle2 = shader.FindKernel("Project2");
 
@@ -281,6 +284,14 @@ public class FluidGPU {
         ComputeBuffer pBuffer2 = new ComputeBuffer(p.Length, 4);
         pBuffer2.SetData(p);
         shader.SetBuffer(kernelHandle2, "p", pBuffer2);
+
+        ComputeBuffer divBuffer2 = new ComputeBuffer(div.Length, 4);
+        divBuffer2.SetData(div);
+        shader.SetBuffer(kernelHandle2, "div", divBuffer2);
+
+        shader.SetFloat("a", a);
+        shader.SetFloat("c", c);
+        shader.SetInt("iter", iter);
 
         shader.Dispatch(kernelHandle2, N/16, N/16, 1);
 
@@ -306,6 +317,7 @@ public class FluidGPU {
         velocXBuffer2.Dispose();
         velocYBuffer2.Dispose();
         pBuffer2.Dispose();
+        divBuffer2.Dispose();
 
     }
 
