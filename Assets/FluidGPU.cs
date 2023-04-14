@@ -180,11 +180,6 @@ public class FluidGPU {
         x[IX(N - 1, 0)] = 0.5f * (x[IX(N - 2, 0)] + x[IX(N - 1, 1)]);
         x[IX(N - 1, N - 1)] = 0.5f * (x[IX(N - 2, N - 1)] + x[IX(N - 1, N - 2)]);
 
-        
-
-        //set_bnd(b, x, shader);
-        // float a = dt * diff * (N - 2) * (N - 2);
-        // lin_solve(b, x, x0, a, 1 + 6 * a, iter, shader);
     }
 
 

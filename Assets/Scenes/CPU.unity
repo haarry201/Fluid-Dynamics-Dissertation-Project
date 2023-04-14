@@ -485,7 +485,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   plane: {fileID: 727632330}
-  N: 90
+  N: 40
   dAmount: 255
   iterations: 16
 --- !u!1 &851399158
@@ -523,6 +523,7 @@ MonoBehaviour:
   frameText: {fileID: 1649837736}
   memText: {fileID: 447083852}
   sampleDuration: 1
+  displayMode: 1
 --- !u!114 &851399160
 MonoBehaviour:
   m_ObjectHideFlags: 0

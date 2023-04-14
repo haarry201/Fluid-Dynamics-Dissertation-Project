@@ -136,6 +136,7 @@ GameObject:
   - component: {fileID: 401663462}
   - component: {fileID: 401663461}
   - component: {fileID: 401663465}
+  - component: {fileID: 401663466}
   m_Layer: 0
   m_Name: Plane
   m_TagString: Untagged
@@ -232,6 +233,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4084bd47ae06bcc49b8b7d9c1c1110e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  plane: {fileID: 401663460}
+  N: 100
+  dAmount: 400
+  densityWidth: 0
+  iterations: 16
+  shader: {fileID: 7200000, guid: 2e85cc0354a5e5347a8ab0f275edaedd, type: 3}
+  tex: {fileID: 0}
+--- !u!114 &401663466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 401663460}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0adf79c5df8a904b9b5b288d3f31145, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   plane: {fileID: 401663460}
@@ -411,6 +431,7 @@ MonoBehaviour:
   frameText: {fileID: 907626986}
   memText: {fileID: 1467356972}
   sampleDuration: 1
+  displayMode: 1
 --- !u!114 &979692277
 MonoBehaviour:
   m_ObjectHideFlags: 0

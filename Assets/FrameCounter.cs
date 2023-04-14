@@ -17,6 +17,11 @@ public class FrameCounter : MonoBehaviour
     [SerializeField, Range(0.1f, 2f)]
     float sampleDuration = 1f;
 
+    public enum DisplayMode { FPS, MS }
+
+    [SerializeField]
+    DisplayMode displayMode = DisplayMode.FPS;
+
     // Update is called once per frame
     void Update()
     {
@@ -33,11 +38,23 @@ public class FrameCounter : MonoBehaviour
 
 
         if (duration >= sampleDuration){
-            frameText.SetText("FPS\nBest: {0:0}\nAverage: {1:0}\nWorst: {2:0}",
-            1f / bestDuration, frames / duration, 1f / worstDuration);
+            if (displayMode == DisplayMode.FPS){
+                frameText.SetText(
+                    "FPS\nBest: {0:0}\nAverage: {1:0}\nWorst: {2:0}",
+                    1f / bestDuration, 
+                    frames / duration, 
+                    1f / worstDuration);
+            }
+            else{
+                frameText.SetText(
+                    "MS\n{0:1}\n{1:1}\n{2:1}",
+                    1000f * bestDuration,
+                    1000f * duration / frames,
+                    1000f * worstDuration);
+            }
 
             timer++;
-            averages += (frames/duration);
+            averages += (1000*duration/frames);
 
             frames = 0;
             duration = 0f;
